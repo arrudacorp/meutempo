@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
+import 'screens/splash_screen.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
+void main() {
   runApp(const MyApp());
 }
 
@@ -13,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'MeuTempo',
+      title: 'Meu Tempo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
@@ -22,9 +20,11 @@ class MyApp extends StatelessWidget {
           backgroundColor: Colors.white,
           elevation: 0,
           foregroundColor: Colors.black,
+          centerTitle: true,
         ),
+        fontFamily: 'Roboto',
       ),
-      home: const HomeScreen(),
+      home: const SplashScreen(), // ← Tela inicial agora é a Splash
       debugShowCheckedModeBanner: false,
     );
   }
