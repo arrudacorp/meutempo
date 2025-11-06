@@ -21,6 +21,8 @@ class PdfService {
     required String projetoMaisUsado,
     required double mediaDiaria,
     required PeriodoPDF periodo,
+    required String nomeUsuario,
+    String? projetoFiltro,
   }) async {
     final pdf = pw.Document();
 
@@ -45,6 +47,21 @@ class PdfService {
                       ),
                     ),
                     pw.SizedBox(height: 4),
+                    pw.Text(
+                      'Usuário: $nomeUsuario', // ← NOVA LINHA
+                      style: const pw.TextStyle(
+                        fontSize: 11,
+                        color: PdfColors.grey700,
+                      ),
+                    ),
+                    if (projetoFiltro != null)
+                      pw.Text(
+                        'Projeto: $projetoFiltro',
+                        style: const pw.TextStyle(
+                          fontSize: 11,
+                          color: PdfColors.grey700,
+                        ),
+                      ),
                     pw.Text(
                       'Período: ${DateFormat('dd/MM/yyyy').format(periodo.inicio)} - ${DateFormat('dd/MM/yyyy').format(periodo.fim)}',
                       style: const pw.TextStyle(fontSize: 10),
@@ -208,7 +225,7 @@ class PdfService {
                 pw.SizedBox(height: 8),
                 pw.Text(
                   'No período analisado, foram registradas ${totalHoras.toStringAsFixed(1)} horas '
-                  'em $totalRegistros atividades. ${_getTextoResumo(projetoMaisUsado, totalHoras, mediaDiaria)}',
+                  'em $totalRegistros atividades. ${_getTextoResumo(projetoMaisUsado, totalHoras, mediaDiaria, nomeUsuario, projetoFiltro)}',
                   style: const pw.TextStyle(fontSize: 11),
                   textAlign: pw.TextAlign.justify,
                 ),
@@ -310,7 +327,7 @@ class PdfService {
       final barras = (percentual ~/ 5); // Cada 5% = uma barra
       tabelaDados.add(<String>[
         _truncateText(projeto.key, 25),
-        projeto.value.toStringAsFixed(1),
+        _formatarDuracaoPDF(projeto.value),
         '${percentual.toStringAsFixed(1)}%',
         '█' * barras,
       ]);
@@ -543,7 +560,7 @@ class PdfService {
                               child: pw.Align(
                                 alignment: pw.Alignment.centerRight,
                                 child: pw.Text(
-                                  '${projeto.value.toStringAsFixed(1)}h',
+                                  _formatarDuracaoPDF(projeto.value),
                                   style: pw.TextStyle(
                                     fontSize: 8,
                                     color: PdfColors.white,
@@ -580,6 +597,19 @@ class PdfService {
     );
   }
 
+  static String _formatarDuracaoPDF(double horasDecimais) {
+    final horas = horasDecimais.floor();
+    final minutos = ((horasDecimais - horas) * 60).round();
+
+    if (horas == 0) {
+      return '${minutos}m';
+    } else if (minutos == 0) {
+      return '${horas}h';
+    } else {
+      return '${horas}h ${minutos}m';
+    }
+  }
+
   static PdfColor _getBarColor(double percentual) {
     if (percentual > 70) return PdfColors.red;
     if (percentual > 40) return PdfColors.orange;
@@ -595,13 +625,23 @@ class PdfService {
     String projetoMaisUsado,
     double totalHoras,
     double mediaDiaria,
+    String nomeUsuario,
+    String? projetoFiltro,
   ) {
     if (totalHoras == 0) {
-      return 'Não foram registradas horas trabalhadas neste período.';
+      return '$nomeUsuario não foram registradas horas trabalhadas neste período.';
     }
 
-    return 'O projeto "$projetoMaisUsado" foi o que demandou mais tempo, '
-        'com uma média diária de ${mediaDiaria.toStringAsFixed(1)} horas trabalhadas.';
+    final totalFormatado = _formatarDuracaoPDF(totalHoras);
+    final mediaFormatada = _formatarDuracaoPDF(mediaDiaria);
+
+    final filtroTexto = projetoFiltro != null
+        ? ' no projeto "$projetoFiltro"'
+        : '';
+
+    return '$nomeUsuario registrou $totalFormatado de trabalho$filtroTexto. '
+        'O projeto "$projetoMaisUsado" foi o que demandou mais tempo, '
+        'com uma média diária de $mediaFormatada.';
   }
 
   static Future<File> savePdf(pw.Document pdf, String fileName) async {

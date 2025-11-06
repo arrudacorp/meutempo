@@ -39,4 +39,23 @@ class ProjetoDao {
       whereArgs: [projeto.id],
     );
   }
+
+  Future<void> deleteProjeto(int id) async {
+    final db = await _databaseHelper.database;
+    await db.delete('projeto', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<Projeto?> getProjetoById(int id) async {
+    final db = await _databaseHelper.database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'projeto',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (maps.isNotEmpty) {
+      return Projeto.fromMap(maps.first);
+    }
+    return null;
+  }
 }

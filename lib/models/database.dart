@@ -65,9 +65,15 @@ class DatabaseHelper {
       'senha': '1234',
     });
 
-    // Inserir alguns projetos
-    await db.insert('projeto', {'nome_projeto': 'Projeto Alpha', 'ativo': 1});
-    await db.insert('projeto', {'nome_projeto': 'Projeto Beta', 'ativo': 1});
-    await db.insert('projeto', {'nome_projeto': 'Projeto Gamma', 'ativo': 1});
+    // Inserir projetos iniciais apenas se a tabela estiver vazia
+    final projetosCount = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM projeto'),
+    );
+
+    if (projetosCount == 0) {
+      await db.insert('projeto', {'nome_projeto': 'Projeto Alpha', 'ativo': 1});
+      await db.insert('projeto', {'nome_projeto': 'Projeto Beta', 'ativo': 1});
+      await db.insert('projeto', {'nome_projeto': 'Projeto Gamma', 'ativo': 1});
+    }
   }
 }

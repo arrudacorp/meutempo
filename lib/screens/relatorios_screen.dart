@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 import 'package:meutempo/models/tempo_gasto_dao.dart';
 import 'package:meutempo/models/projeto_dao.dart';
 import 'package:meutempo/models/tempo_gasto.dart';
 import 'package:meutempo/models/projeto.dart';
 import 'package:meutempo/models/auth_service.dart';
-import 'package:printing/printing.dart';
-import 'package:pdf/pdf.dart';
 import 'package:meutempo/services/pdf_service.dart';
 
 class RelatoriosScreen extends StatefulWidget {
@@ -27,51 +27,13 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
     start: DateTime.now().subtract(const Duration(days: 30)),
     end: DateTime.now(),
   );
+  int? _projetoFiltro; // null = todos os projetos
+  bool _mostrarFiltros = false;
 
   @override
   void initState() {
     super.initState();
     _carregarDados();
-  }
-
-  Future<void> _exportarPDF() async {
-    try {
-      final tempoPorProjeto = _calcularTempoPorProjeto();
-      final tempoPorDia = _calcularTempoPorDia();
-      final totalHoras = _calcularTotalHoras();
-      final totalRegistros = _calcularTotalRegistros();
-      final projetoMaisUsado = _getProjetoMaisUsado();
-      final mediaDiaria = _calcularTotalHoras() > 0
-          ? (_calcularTotalHoras() / _periodoSelecionado.duration.inDays)
-          : 0.0;
-
-      final periodoPDF = PeriodoPDF(
-        inicio: _periodoSelecionado.start,
-        fim: _periodoSelecionado.end,
-      );
-
-      final pdf = await PdfService.generateRelatorioPDF(
-        tempoPorProjeto: tempoPorProjeto,
-        tempoPorDia: tempoPorDia,
-        totalHoras: totalHoras,
-        totalRegistros: totalRegistros,
-        projetoMaisUsado: projetoMaisUsado,
-        mediaDiaria: mediaDiaria,
-        periodo: periodoPDF,
-      );
-
-      // Mostrar preview e opções de compartilhamento
-      await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdf.save(),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro ao gerar PDF: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
 
   Future<void> _carregarDados() async {
@@ -81,7 +43,7 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
         final registros = await _tempoGastoDao.getTempoGastoByUsuario(
           usuario.id!,
         );
-        final projetos = await _projetoDao.getAllProjetos();
+        final projetos = await _projetoDao.getProjetosAtivos();
 
         setState(() {
           _registros = registros;
@@ -114,10 +76,16 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
 
   List<TempoGasto> _getRegistrosFiltrados() {
     return _registros.where((registro) {
-      return registro.dataHoraIni.isAfter(_periodoSelecionado.start) &&
+      final dentroPeriodo =
+          registro.dataHoraIni.isAfter(_periodoSelecionado.start) &&
           registro.dataHoraIni.isBefore(
             _periodoSelecionado.end.add(const Duration(days: 1)),
           );
+
+      final projetoCorreto =
+          _projetoFiltro == null || registro.idProjeto == _projetoFiltro;
+
+      return dentroPeriodo && projetoCorreto;
     }).toList();
   }
 
@@ -183,6 +151,15 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
     return entry.key;
   }
 
+  String _getNomeProjetoFiltro() {
+    if (_projetoFiltro == null) return 'Todos os Projetos';
+    final projeto = _projetos.firstWhere(
+      (p) => p.id == _projetoFiltro,
+      orElse: () => Projeto(id: 0, nomeProjeto: 'Desconhecido', ativo: true),
+    );
+    return projeto.nomeProjeto;
+  }
+
   Widget _buildCardEstatistica(
     String titulo,
     String valor,
@@ -214,7 +191,9 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
     final tempoPorProjeto = _calcularTempoPorProjeto();
 
     if (tempoPorProjeto.isEmpty) {
-      return _buildPlaceholder('Nenhum dado disponível para o período');
+      return _buildPlaceholder(
+        'Nenhum dado disponível para o período e filtros selecionados',
+      );
     }
 
     final dados = tempoPorProjeto.entries.toList()
@@ -252,7 +231,7 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
                             ),
                           ),
                           Text(
-                            '${entry.value.toStringAsFixed(1)}h',
+                            _formatarDuracao(entry.value),
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -343,7 +322,7 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
                     children: [
                       Container(
                         width: 30,
-                        height: altura.toDouble(),
+                        height: double.parse(altura.toString()),
                         decoration: BoxDecoration(
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(4),
@@ -434,7 +413,7 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
                     '${porcentagem.toStringAsFixed(1)}%',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text('${projeto.value.toStringAsFixed(1)} horas'),
+                  subtitle: Text(_formatarDuracao(projeto.value)),
                 );
               }).toList(),
             ),
@@ -463,6 +442,157 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
     );
   }
 
+  Widget _buildFiltros() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Filtros',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
+            // Filtro de Projeto
+            DropdownButtonFormField<int>(
+              value: _projetoFiltro,
+              decoration: const InputDecoration(
+                labelText: 'Projeto',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.filter_list),
+              ),
+              items: [
+                const DropdownMenuItem<int>(
+                  value: null,
+                  child: Text('Todos os Projetos'),
+                ),
+                ..._projetos.map((projeto) {
+                  return DropdownMenuItem<int>(
+                    value: projeto.id,
+                    child: Text(projeto.nomeProjeto),
+                  );
+                }).toList(),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _projetoFiltro = value;
+                });
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            // Período
+            InkWell(
+              onTap: _selecionarPeriodo,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade400),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today, color: Colors.blue),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Período',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                          Text(
+                            '${DateFormat('dd/MM/yyyy').format(_periodoSelecionado.start)} - ${DateFormat('dd/MM/yyyy').format(_periodoSelecionado.end)}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatarDuracao(double horasDecimais) {
+    if (horasDecimais == 0) return '0h';
+
+    final horas = horasDecimais.floor();
+    final minutos = ((horasDecimais - horas) * 60).round();
+
+    // Ajuste para casos como 1.99 horas que dariam 1h 60m
+    final minutosAjustados = minutos >= 60 ? 0 : minutos;
+    final horasAjustadas = minutos >= 60 ? horas + 1 : horas;
+
+    if (horasAjustadas == 0) {
+      return '${minutosAjustados}m';
+    } else if (minutosAjustados == 0) {
+      return '${horasAjustadas}h';
+    } else {
+      return '${horasAjustadas}h ${minutosAjustados}m';
+    }
+  }
+
+  Future<void> _exportarPDF() async {
+    try {
+      final tempoPorProjeto = _calcularTempoPorProjeto();
+      final tempoPorDia = _calcularTempoPorDia();
+      final totalHoras = _calcularTotalHoras();
+      final totalRegistros = _calcularTotalRegistros();
+      final projetoMaisUsado = _getProjetoMaisUsado();
+      final mediaDiaria = _calcularTotalHoras() > 0
+          ? (_calcularTotalHoras() / _periodoSelecionado.duration.inDays)
+          : 0.0;
+
+      // Obter nome do usuário logado
+      final usuario = AuthService.getUsuarioLogado();
+      final nomeUsuario = usuario?.nome ?? 'Usuário';
+
+      final periodoPDF = PeriodoPDF(
+        inicio: _periodoSelecionado.start,
+        fim: _periodoSelecionado.end,
+      );
+
+      final pdf = await PdfService.generateRelatorioPDF(
+        tempoPorProjeto: tempoPorProjeto,
+        tempoPorDia: tempoPorDia,
+        totalHoras: totalHoras,
+        totalRegistros: totalRegistros,
+        projetoMaisUsado: projetoMaisUsado,
+        mediaDiaria: mediaDiaria,
+        periodo: periodoPDF,
+        nomeUsuario: nomeUsuario,
+        projetoFiltro: _projetoFiltro != null
+            ? _getNomeProjetoFiltro()
+            : null, // NOVO PARÂMETRO
+      );
+
+      // Mostrar preview e opções de compartilhamento
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao gerar PDF: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -471,6 +601,15 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
         backgroundColor: Colors.blue.shade50,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: () {
+              setState(() {
+                _mostrarFiltros = !_mostrarFiltros;
+              });
+            },
+            tooltip: 'Filtros',
+          ),
           IconButton(
             icon: const Icon(Icons.picture_as_pdf),
             onPressed: _exportarPDF,
@@ -490,46 +629,39 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Cabeçalho com período
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.calendar_today, color: Colors.blue),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Período Selecionado',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                Text(
-                                  '${DateFormat('dd/MM/yyyy').format(_periodoSelecionado.start)} - ${DateFormat('dd/MM/yyyy').format(_periodoSelecionado.end)}',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                  // Informações do filtro atual
+                  if (_projetoFiltro != null || _mostrarFiltros)
+                    Card(
+                      color: Colors.blue.shade50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.info_outline,
+                              color: Colors.blue,
+                              size: 16,
                             ),
-                          ),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.filter_list),
-                            label: const Text('Filtrar'),
-                            onPressed: _selecionarPeriodo,
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _projetoFiltro == null
+                                    ? 'Mostrando todos os projetos'
+                                    : 'Filtrado por: ${_getNomeProjetoFiltro()}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
+
+                  // Filtros (expandível)
+                  if (_mostrarFiltros) _buildFiltros(),
+
+                  if (_mostrarFiltros) const SizedBox(height: 16),
 
                   // Estatísticas rápidas
                   GridView.count(
@@ -540,7 +672,7 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
                     children: [
                       _buildCardEstatistica(
                         'Total Horas',
-                        _calcularTotalHoras().toStringAsFixed(1),
+                        _formatarDuracao(_calcularTotalHoras()),
                         Icons.access_time,
                         Colors.blue,
                       ),
@@ -559,10 +691,11 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
                       _buildCardEstatistica(
                         'Média Diária',
                         _calcularTotalHoras() > 0
-                            ? (_calcularTotalHoras() /
-                                      _periodoSelecionado.duration.inDays)
-                                  .toStringAsFixed(1)
-                            : '0.0',
+                            ? _formatarDuracao(
+                                _calcularTotalHoras() /
+                                    _periodoSelecionado.duration.inDays,
+                              )
+                            : '0h',
                         Icons.timeline,
                         Colors.purple,
                       ),

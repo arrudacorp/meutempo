@@ -3,6 +3,7 @@ import 'historico_screen.dart';
 import 'novo_registro_screen.dart';
 import 'relatorios_screen.dart';
 import 'home_screen.dart';
+import 'gerenciar_projetos_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -17,6 +18,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const HistoricoScreen(), // Tela de histórico quando logado
     const NovoRegistroScreen(),
+    const GerenciarProjetosScreen(),
     const RelatoriosScreen(),
   ];
 
@@ -47,12 +49,19 @@ class _MainScreenState extends State<MainScreen> {
             _currentIndex = index;
           });
         },
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.blue.shade50, // Fundo da barra
+        selectedItemColor: Colors.blue.shade800, // Ícone selecionado
+        unselectedItemColor: Colors.grey.shade600, // Ícone não selecionado
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.history),
             label: 'Histórico',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Novo'),
+          BottomNavigationBarItem(icon: Icon(Icons.folder), label: 'Projetos'),
           BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart),
             label: 'Relatórios',
