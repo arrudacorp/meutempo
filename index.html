@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joilson Arruda - Desenvolvedor Full Stack</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset e configurações básicas */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --text-color: #333;
+            --text-light: #777;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        section {
+            padding: 80px 0;
+        }
+
+        h1, h2, h3 {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+        }
+
+        h2 {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background-color: var(--secondary-color);
+            margin: 10px auto;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: var(--text-light);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Header e Navegação */
+        header {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+
+        header.scrolled {
+            padding: 5px 0;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            transition: all 0.3s;
+        }
+
+        header.scrolled nav {
+            padding: 10px 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--secondary-color);
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-left: 30px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background-color: var(--secondary-color);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-links a:hover {
+            color: var(--secondary-color);
+        }
+
+        .menu-toggle {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 150px 0 100px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,213.3C672,192,768,128,864,128C960,128,1056,192,1152,192C1248,192,1344,128,1392,96L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            color: white;
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 30px;
+        }
+
+        .hero-btns {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .hero .btn {
+            background-color: white;
+            color: var(--secondary-color);
+        }
+
+        .hero .btn:hover {
+            background-color: var(--light-color);
+        }
+
+        .hero .btn-outline {
+            background-color: transparent;
+            border: 2px solid white;
+            color: white;
+        }
+
+        .hero .btn-outline:hover {
+            background-color: white;
+            color: var(--secondary-color);
+        }
+
+        /* Sobre */
+        .about {
+            background-color: white;
+        }
+
+        .about-content {
+            display: flex;
+            align-items: center;
+            gap: 50px;
+        }
+
+        .about-img {
+            flex: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.5s;
+        }
+
+        .about-img:hover {
+            transform: scale(1.03);
+        }
+
+        .about-img img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .about-text {
+            flex: 1;
+        }
+
+        /* Habilidades */
+        .skills {
+            background-color: #f5f7fa;
+        }
+
+        .skills-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .skill-category {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skill-category::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, var(--secondary-color), var(--accent-color));
+        }
+
+        .skill-category:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .skill-icon {
+            font-size: 3rem;
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+        }
+
+        /* Portfólio - CARROSSEL ADICIONADO */
+        .portfolio {
+            background-color: white;
+        }
+
+        .portfolio-filter {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            background-color: transparent;
+            border: 1px solid var(--secondary-color);
+            color: var(--secondary-color);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active, .filter-btn:hover {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .portfolio-item {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+            position: relative;
+        }
+
+        .portfolio-item:hover {
+            transform: translateY(-10px);
+        }
+
+        /* CARROSSEL DE IMAGENS */
+        .portfolio-carousel {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+            background-color: #eee;
+        }
+
+        .carousel-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .carousel-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .carousel-slide.active {
+            opacity: 1;
+        }
+
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .carousel-slide .slide-icon {
+            font-size: 3rem;
+            color: var(--secondary-color);
+        }
+
+        .carousel-nav {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .carousel-dot.active {
+            background-color: white;
+            transform: scale(1.2);
+        }
+
+        .carousel-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .portfolio-carousel:hover .carousel-arrow {
+            opacity: 1;
+        }
+
+        .carousel-prev {
+            left: 10px;
+        }
+
+        .carousel-next {
+            right: 10px;
+        }
+
+        .portfolio-info {
+            padding: 20px;
+            background-color: white;
+        }
+
+        .portfolio-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .portfolio-tag {
+            background-color: var(--light-color);
+            color: var(--text-light);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        /* MODAL PARA IMAGENS AMPLIADAS */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 2001;
+        }
+
+        /* Contato */
+        .contact {
+            background-color: #f5f7fa;
+        }
+
+        .contact-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 50px;
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .contact-icon {
+            width: 50px;
+            height: 50px;
+            background-color: var(--secondary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+
+        .contact-item:hover .contact-icon {
+            transform: scale(1.1);
+        }
+
+        .contact-form {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+        }
+
+        textarea.form-control {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .social-link {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .social-link:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-5px);
+        }
+
+        .copyright {
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        /* Botão Voltar ao Topo */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background-color: var(--secondary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 999;
+        }
+
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .back-to-top:hover {
+            background-color: var(--primary-color);
+            transform: translateY(-5px);
+        }
+
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        /* Responsividade */
+        @media (max-width: 992px) {
+            .about-content {
+                flex-direction: column;
+            }
+            
+            .about-img, .about-text {
+                flex: none;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+            
+            .nav-links {
+                position: fixed;
+                top: 70px;
+                left: -100%;
+                width: 100%;
+                height: calc(100vh - 70px);
+                background-color: white;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                padding-top: 50px;
+                transition: left 0.3s;
+                box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            }
+            
+            .nav-links.active {
+                left: 0;
+            }
+            
+            .nav-links li {
+                margin: 15px 0;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero-btns {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 250px;
+            }
+            
+            .back-to-top {
+                bottom: 20px;
+                right: 20px;
+            }
+
+            .carousel-arrow {
+                opacity: 1;
+            }
+        }
+
+         /* MODAL CORRIGIDO */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            max-width: 95%;
+            max-height: 95%;
+            position: relative;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 2.5rem;
+            cursor: pointer;
+            z-index: 2001;
+            background: rgba(0,0,0,0.7);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            border: 2px solid white;
+        }
+
+        .modal-close:hover {
+            background: rgba(255,0,0,0.8);
+            transform: scale(1.1);
+        }
+
+        .modal-nav {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            transform: translateY(-50%);
+            z-index: 2001;
+        }
+
+        .modal-arrow {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.8rem;
+            transition: all 0.3s;
+            border: 2px solid white;
+        }
+
+        .modal-arrow:hover {
+            background: var(--secondary-color);
+            transform: scale(1.1);
+        }
+
+        /* Indicador de imagem no modal */
+        .modal-counter {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            z-index: 2001;
+        }
+
+        /* OPÇÃO 2: Ajustar altura do carrossel para se adaptar às imagens */
+    .portfolio-carousel {
+        width: 100%;
+        height: auto; /* Altura automática */
+        min-height: 200px; /* Altura mínima */
+        max-height: 300px; /* Altura máxima */
+        position: relative;
+        overflow: hidden;
+        background-color: #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .carousel-container {
+        width: 100%;
+        height: 100%;
+        position: relative;
+    }
+
+    .carousel-slide {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px; /* Espaço ao redor da imagem */
+    }
+
+    .carousel-slide.active {
+        opacity: 1;
+    }
+
+    .carousel-slide img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain; /* Imagem completa sem cortar */
+        border-radius: 4px;
+    }
+
+    /* Modal - garantir que mostra imagem completa */
+    .modal-content img {
+        max-width: 100%;
+        max-height: 90vh;
+        object-fit: contain;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    /* OPÇÃO 3: Layout alternativo - carrossel com altura fixa mas imagem centralizada */
+    .portfolio-carousel.fixed-height {
+        height: 250px; /* Altura fixa */
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .carousel-slide.centered img {
+        width: auto;
+        height: auto;
+        max-width: 90%;
+        max-height: 90%;
+        object-fit: contain;
+    }
+
+    /* Indicador de que a imagem está cortada */
+    .carousel-slide::after {
+        content: '🔍 Clique para ver completa';
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.7);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.7rem;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .carousel-slide:hover::after {
+        opacity: 1;
+    }
+
+    </style>
+</head>
+<body>
+    <!-- Header e Navegação -->
+    <header id="header">
+        <div class="container">
+            <nav>
+                <a href="#" class="logo">Joilson<span>Arruda</span></a>
+                <ul class="nav-links">
+                    <li><a href="#home">Início</a></li>
+                    <li><a href="#about">Sobre</a></li>
+                    <li><a href="#skills">Habilidades</a></li>
+                    <li><a href="#portfolio">Portfólio</a></li>
+                    <li><a href="#contact">Contato</a></li>
+                </ul>
+                <div class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Joilson Arruda</h1>
+                <p>Desenvolvedor Full Stack em soluções web, mobile e desktop</p>
+                <div class="hero-btns">
+                    <a href="#portfolio" class="btn">Ver Trabalhos</a>
+                    <a href="#contact" class="btn btn-outline">Entrar em Contato</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sobre -->
+    <section class="about" id="about">
+        <div class="container">
+            <h2>Sobre Mim</h2>
+            <div class="about-content">
+                <div class="about-img">
+                    <!-- Imagem de perfil - você pode substituir por uma sua -->
+                    <img src="img/perfil.jpg" alt="Joilson Arruda - Desenvolvedor" height="280px">
+                </div>
+                <div class="about-text">
+                    <p>Olá! Sou Joilson Arruda, um desenvolvedor com experiência em criar soluções digitais para web, mobile e desktop.</p>
+                    <p>Com formação em Análise e Desenvolvimento de Sistemas e anos de experiência prática, tenho trabalhado em diversos projetos, desde aplicações corporativas até soluções personalizadas para clientes específicos.</p>
+                    <p>Meu objetivo é sempre entregar produtos de alta qualidade, com código limpo, performance otimizada e uma excelente experiência do usuário.</p>
+                    <a href="#contact" class="btn">Entre em Contato</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Habilidades -->
+    <section class="skills" id="skills">
+        <div class="container">
+            <h2>Minhas Habilidades</h2>
+            <div class="skills-container">
+                <div class="skill-category">
+                    <div class="skill-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3>Desenvolvimento Web</h3>
+                    <p>Criação de sites responsivos, aplicações web, e-commerce e sistemas web completos utilizando as mais modernas tecnologias.</p>
+                    <div class="portfolio-tags">
+                        <span class="portfolio-tag">HTML/CSS</span>
+                        <span class="portfolio-tag">JavaScript</span>
+                        <span class="portfolio-tag">C#</span>
+                        <span class="portfolio-tag">.NET</span>
+                        <span class="portfolio-tag">GVINCI</span>
+                    </div>
+                </div>
+                <div class="skill-category">
+                    <div class="skill-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>Desenvolvimento Mobile</h3>
+                    <p>Desenvolvimento de aplicativos para iOS e Android, com foco em performance e experiência do usuário.</p>
+                    <div class="portfolio-tags">
+                        <span class="portfolio-tag">Dart</span>
+                        <span class="portfolio-tag">Flutter</span>
+                        <span class="portfolio-tag">iOS</span>
+                        <span class="portfolio-tag">Android</span>
+                    </div>
+                </div>
+                <div class="skill-category">
+                    <div class="skill-icon">
+                        <i class="fas fa-desktop"></i>
+                    </div>
+                    <h3>Desenvolvimento Desktop</h3>
+                    <p>Criação de aplicações desktop para Windows, utilizando tecnologias modernas e frameworks apropriados.</p>
+                    <div class="portfolio-tags">
+                        <span class="portfolio-tag">C#</span>
+                        <span class="portfolio-tag">Java</span>
+                        <span class="portfolio-tag">Delphi</span>
+                        <span class="portfolio-tag">Python</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Portfólio -->
+    <section class="portfolio" id="portfolio">
+        <div class="container">
+            <h2>Meu Portfólio</h2>
+            <div class="portfolio-filter">
+                <button class="filter-btn active" data-filter="all">Todos</button>
+                <button class="filter-btn" data-filter="web">Web</button>
+                <button class="filter-btn" data-filter="mobile">Mobile</button>
+                <button class="filter-btn" data-filter="api">API</button>
+            </div>
+            <div class="portfolio-grid">
+                <!-- Projeto 1 - CORRIGIDO -->
+                <div class="portfolio-item" data-category="mobile">
+                    <div class="portfolio-carousel fixed-height">
+                        <div class="carousel-container" id="carousel-6">
+                            <div class="carousel-slide active">
+                                <img src="img/meutempo_1.jpg" alt="Login" onclick="openModal('img/meutempo_1.jpg', 'carousel-6', 0)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/meutempo_2.jpg" alt="Formulario" onclick="openModal('img/meutempo_2.jpg', 'carousel-6', 1)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/meutempo_3.jpg" alt="Menu" onclick="openModal('img/meutempo_3.jpg', 'carousel-6', 2)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/meutempo_4.jpg" alt="Menu" onclick="openModal('img/meutempo_4.jpg', 'carousel-6', 3)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/meutempo_5.jpg" alt="Menu" onclick="openModal('img/meutempo_5.jpg', 'carousel-6', 4)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/meutempo_6.jpg" alt="Menu" onclick="openModal('img/meutempo_6.jpg', 'carousel-6', 5)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/meutempo_7.jpg" alt="Menu" onclick="openModal('img/meutempo_7.jpg', 'carousel-6', 6)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/meutempo_8.jpg" alt="Menu" onclick="openModal('img/meutempo_8.jpg', 'carousel-6', 7)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/meutempo_9.jpg" alt="Menu" onclick="openModal('img/meutempo_9.jpg', 'carousel-6', 8)">
+                            </div>
+                            <button class="carousel-arrow carousel-prev" onclick="changeSlide('carousel-6', -1)">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="carousel-arrow carousel-next" onclick="changeSlide('carousel-6', 1)">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <div class="carousel-nav">
+                                <div class="carousel-dot active" onclick="goToSlide('carousel-6', 0)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-6', 1)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-6', 2)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-6', 3)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-6', 4)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-6', 5)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-6', 6)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-6', 7)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-6', 8)"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="portfolio-info">
+                        <h3>Aplicativo Mobile Produtividade (android)</h3>
+                        <p style= "text-align: justify">Meu Tempo - Controle suas horas de trabalho de forma simples e eficiente. 
+                            Gerencie projetos, acompanhe produtividade e gere relatórios detalhados. 
+                            Perfect para freelancers, equipes e profissionais autônomos..</p>
+                        <div class="portfolio-tags">
+                            <span class="portfolio-tag">flutter</span>
+                            <span class="portfolio-tag">Dart</span>
+                            <span class="portfolio-tag">Sqlite</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="portfolio-item" data-category="mobile">
+                    <div class="portfolio-carousel fixed-height">
+                        <div class="carousel-container" id="carousel-1">
+                            <div class="carousel-slide active">
+                                <img src="img/risco1.jpg" alt="Login" onclick="openModal('img/risco1.jpg', 'carousel-1', 0)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/risco2.jpg" alt="Formulario" onclick="openModal('img/risco2.jpg', 'carousel-1', 1)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/risco3.jpg" alt="Menu" onclick="openModal('img/risco3.jpg', 'carousel-1', 2)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/risco4.jpg" alt="Menu" onclick="openModal('img/risco4.jpg', 'carousel-1', 3)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/risco5.jpg" alt="Menu" onclick="openModal('img/risco5.jpg', 'carousel-1', 4)">
+                            </div>
+                            <button class="carousel-arrow carousel-prev" onclick="changeSlide('carousel-1', -1)">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="carousel-arrow carousel-next" onclick="changeSlide('carousel-1', 1)">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <div class="carousel-nav">
+                                <div class="carousel-dot active" onclick="goToSlide('carousel-1', 0)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-1', 1)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-1', 2)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-1', 3)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-1', 4)"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="portfolio-info">
+                        <h3>Aplicativo Mobile Qualificação de Risco (android)</h3>
+                        <p>Aplicativo android para cadastramento familiar e classificar o risco da familia.</p>
+                        <p>Integração com API para sistema web.</p>
+                        <div class="portfolio-tags">
+                            <span class="portfolio-tag">flutter</span>
+                            <span class="portfolio-tag">Dart</span>
+                            <span class="portfolio-tag">Sqlite</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="portfolio-item" data-category="web">
+                    <div class="portfolio-carousel fixed-height">
+                        <div class="carousel-container" id="carousel-2">
+                            <div class="carousel-slide active">
+                                <img src="img/itaclass1.png" alt="Login" onclick="openModal('img/itaclass1.png', 'carousel-2', 0)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/itaclass2.png" alt="Formulario" onclick="openModal('img/itaclass2.png', 'carousel-2', 1)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/itaclass3.png" alt="Menu" onclick="openModal('img/itaclass3.png', 'carousel-2', 2)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/itaclass4.png" alt="Menu" onclick="openModal('img/itaclass4.png', 'carousel-2', 3)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/itaclass5.png" alt="Menu" onclick="openModal('img/itaclass5.png', 'carousel-2', 4)">
+                            </div>
+                            <button class="carousel-arrow carousel-prev" onclick="changeSlide('carousel-2', -1)">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="carousel-arrow carousel-next" onclick="changeSlide('carousel-2', 1)">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <div class="carousel-nav">
+                                <div class="carousel-dot active" onclick="goToSlide('carousel-2', 0)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-2', 1)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-2', 2)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-2', 3)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-2', 4)"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="portfolio-info">
+                        <h3>Plataforma de Locação de imóveis PWA</h3>
+                        <p>Plataforma de classificados de locação de imóveis.</p>
+                        <div class="portfolio-tags">
+                            <span class="portfolio-tag">Gvinci</span>
+                            <span class="portfolio-tag">C#</span>
+                            <span class="portfolio-tag">SQLSERVER</span>
+                            <span class="portfolio-tag">JavaScript</span>
+                            <span class="portfolio-tag">CSS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="portfolio-item" data-category="web">
+                    <div class="portfolio-carousel fixed-height">
+                        <div class="carousel-container" id="carousel-3">
+                            <div class="carousel-slide active">
+                                <img src="img/sisagenda1.png" alt="Login" onclick="openModal('img/sisagenda1.png', 'carousel-3', 0)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/sisagenda2.png" alt="Formulario" onclick="openModal('img/sisagenda2.png', 'carousel-3', 1)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/sisagenda3.png" alt="Menu" onclick="openModal('img/sisagenda3.png', 'carousel-3', 2)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/sisagenda4.png" alt="Menu" onclick="openModal('img/sisagenda4.png', 'carousel-3', 3)">
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="img/sisagenda5.png" alt="Menu" onclick="openModal('img/sisagenda5.png', 'carousel-3', 4)">
+                            </div>
+                            <button class="carousel-arrow carousel-prev" onclick="changeSlide('carousel-3', -1)">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="carousel-arrow carousel-next" onclick="changeSlide('carousel-3', 1)">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <div class="carousel-nav">
+                                <div class="carousel-dot active" onclick="goToSlide('carousel-3', 0)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-3', 1)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-3', 2)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-3', 3)"></div>
+                                <div class="carousel-dot" onclick="goToSlide('carousel-3', 4)"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="portfolio-info">
+                        <h3>Sistema de Agendamento para Clínicas e Hospitais</h3>
+                        <p>Sistema de agendamento e atendimento para clínicas e hospitais.</p>
+                        <div class="portfolio-tags">
+                            <span class="portfolio-tag">Gvinci</span>
+                            <span class="portfolio-tag">C#</span>
+                            <span class="portfolio-tag">SQLSERVER</span>
+                            <span class="portfolio-tag">JavaScript</span>
+                            <span class="portfolio-tag">CSS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="portfolio-item" data-category="web">
+                    <div class="portfolio-carousel fixed-height">
+                        <div class="carousel-container" id="carousel-4">
+                            <div class="carousel-slide active">
+                                <img src="img/assertiva-web.png" alt="Login" onclick="openModal('img/assertiva-web.png', 'carousel-4', 0)">
+                            </div>
+                            <button class="carousel-arrow carousel-prev" onclick="changeSlide('carousel-4', -1)">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="carousel-arrow carousel-next" onclick="changeSlide('carousel-4', 1)">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <div class="carousel-nav">
+                                <div class="carousel-dot active" onclick="goToSlide('carousel-4', 0)"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="portfolio-info">
+                        <h3>Portal Escolar</h3>
+                        <p  style= "text-align: justify">Sistema de gerênciamento escolar com área administrativa, professores e alunos. Integração com portal de leitura para alunos.</p>
+                        <div class="portfolio-tags">
+                            <span class="portfolio-tag">Gvinci</span>
+                            <span class="portfolio-tag">C#</span>
+                            <span class="portfolio-tag">SQLSERVER</span>
+                            <span class="portfolio-tag">JavaScript</span>
+                            <span class="portfolio-tag">CSS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="portfolio-item" data-category="api">
+                    <div class="portfolio-carousel fixed-height">
+                        <div class="carousel-container" id="carousel-4">
+                            <div class="carousel-slide active">
+                                <img src="img/imgAPI.jpg" alt="Login" onclick="openModal('img/imgAPI.jpg', 'carousel-5', 0)">
+                            </div>
+                            <button class="carousel-arrow carousel-prev" onclick="changeSlide('carousel-5', -1)">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="carousel-arrow carousel-next" onclick="changeSlide('carousel-5', 1)">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <div class="carousel-nav">
+                                <div class="carousel-dot active" onclick="goToSlide('carousel-5', 0)"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="portfolio-info">
+                        <h3>Criação de API</h3>
+                        <p>API para integração entre aplicativo android e sistema web.</p>
+                        <div class="portfolio-tags">
+                            <span class="portfolio-tag">.NET</span>
+                            <span class="portfolio-tag">C#</span>
+                            <span class="portfolio-tag">SQLSERVER</span>
+                        </div>
+                    </div>
+                </div>                
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal único -->
+    <div class="modal" id="imageModal">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <div class="modal-nav">
+            <button class="modal-arrow modal-prev" onclick="changeModalSlide(-1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="modal-arrow modal-next" onclick="changeModalSlide(1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="">
+        </div>
+        <div class="modal-counter" id="modalCounter">1 / 3</div>
+    </div>
+
+    <!-- Contato -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <h2>Entre em Contato</h2>
+            <div class="contact-container">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div>
+                            <h3>Email</h3>
+                            <p>arrudacorp@gmail.com</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div>
+                            <h3>Telefone</h3>
+                            <p>(77) 99942-6812</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div>
+                            <h3>Localização</h3>
+                            <p>Brasil</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <form action="https://formsubmit.co/arrudacorp@gmail.com" method="POST">
+                        <!-- Campos ocultos para configuração -->
+                        <input type="hidden" name="_captcha" value="false">
+                        <input type="hidden" name="_subject" value="Novo contato do portfólio!">
+                        <input type="hidden" name="_next" value="#">
+                        
+                        <div class="form-group">
+                            <input type="text" name="name" class="form-control" placeholder="Seu Nome" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" name="email" class="form-control" placeholder="Seu Email" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" name="subject" class="form-control" placeholder="Assunto" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea name="message" class="form-control" placeholder="Sua Mensagem" required></textarea>
+                        </div>
+                        <button type="submit" class="btn">Enviar Mensagem</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <a href="#" class="logo" style="color: white;">Joilson<span style="color: #3498db;">Arruda</span></a>
+            <div class="social-links">
+                <a href="https://www.linkedin.com/in/joilson-arruda-665171123" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                <a href="https://github.com/arrudacorp/" class="social-link"><i class="fab fa-github"></i></a>
+            </div>
+            <p class="copyright">&copy; 2025 ArrudaCorp. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Botão Voltar ao Topo -->
+    <a href="#" class="back-to-top" id="backToTop">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+
+    <script>
+    // Menu Toggle para Mobile
+    document.querySelector('.menu-toggle').addEventListener('click', function() {
+        document.querySelector('.nav-links').classList.toggle('active');
+    });
+
+    // Fechar menu ao clicar em um link (mobile)
+    document.querySelectorAll('.nav-links a').forEach(link => {
+        link.addEventListener('click', function() {
+            document.querySelector('.nav-links').classList.remove('active');
+        });
+    });
+
+    // Filtro do Portfólio
+    document.querySelectorAll('.filter-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            // Remover classe active de todos os botões
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Adicionar classe active ao botão clicado
+            this.classList.add('active');
+            
+            // Obter o filtro
+            const filter = this.getAttribute('data-filter');
+            
+            // Filtrar itens
+            document.querySelectorAll('.portfolio-item').forEach(item => {
+                if (filter === 'all' || item.getAttribute('data-category') === filter) {
+                    item.style.display = 'block';
+                    // Adicionar animação
+                    item.style.animation = 'fadeIn 0.5s ease forwards';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Formulário de Contato
+    document.getElementById('contactForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('Obrigado pela mensagem! Entrarei em contato em breve.');
+        this.reset();
+    });
+
+    // Efeito de scroll suave
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return;
+            
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                window.scrollTo({
+                    top: targetElement.offsetTop - 80,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+
+    // Header scroll effect
+    window.addEventListener('scroll', function() {
+        const header = document.getElementById('header');
+        const backToTop = document.getElementById('backToTop');
+        
+        if (window.scrollY > 100) {
+            header.classList.add('scrolled');
+            backToTop.classList.add('show');
+        } else {
+            header.classList.remove('scrolled');
+            backToTop.classList.remove('show');
+        }
+    });
+
+    // Animações de entrada
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in');
+            }
+        });
+    }, observerOptions);
+
+    // Observar elementos para animação
+    document.querySelectorAll('section, .skill-category, .portfolio-item').forEach(el => {
+        observer.observe(el);
+    });
+
+    // ========== SISTEMA DE CARROSSEL E MODAL SIMPLIFICADO ==========
+    
+    // Variáveis globais para controle do modal
+    let currentCarousel = null;
+    let currentSlideIndex = 0;
+
+    // FUNÇÃO PARA MUDAR SLIDE NO CARROSSEL
+    function changeSlide(carouselId, direction) {
+        const carousel = document.getElementById(carouselId);
+        if (!carousel) return;
+        
+        const slides = carousel.querySelectorAll('.carousel-slide');
+        const dots = carousel.querySelectorAll('.carousel-dot');
+        let currentIndex = 0;
+        
+        // Encontrar o slide ativo atual
+        slides.forEach((slide, index) => {
+            if (slide.classList.contains('active')) {
+                currentIndex = index;
+            }
+        });
+        
+        // Calcular novo índice
+        let newIndex = currentIndex + direction;
+        if (newIndex < 0) newIndex = slides.length - 1;
+        if (newIndex >= slides.length) newIndex = 0;
+        
+        // Atualizar slides
+        slides[currentIndex].classList.remove('active');
+        slides[newIndex].classList.add('active');
+        
+        // Atualizar dots
+        dots[currentIndex].classList.remove('active');
+        dots[newIndex].classList.add('active');
+    }
+
+    // FUNÇÃO PARA IR PARA SLIDE ESPECÍFICO
+    function goToSlide(carouselId, index) {
+        const carousel = document.getElementById(carouselId);
+        if (!carousel) return;
+        
+        const slides = carousel.querySelectorAll('.carousel-slide');
+        const dots = carousel.querySelectorAll('.carousel-dot');
+        
+        // Remover classe active de todos os slides e dots
+        slides.forEach(slide => slide.classList.remove('active'));
+        dots.forEach(dot => dot.classList.remove('active'));
+        
+        // Adicionar classe active ao slide e dot selecionado
+        if (slides[index]) slides[index].classList.add('active');
+        if (dots[index]) dots[index].classList.add('active');
+    }
+
+    // FUNÇÃO PARA ABRIR MODAL - VERSÃO SIMPLIFICADA
+    function openModal(clickedImage, carouselId, slideIndex) {
+        console.log('Abrindo modal - Imagem clicada:', clickedImage);
+        
+        const modal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+        const modalCounter = document.getElementById('modalCounter');
+        
+        // Salvar informações do carrossel atual
+        currentCarousel = document.getElementById(carouselId);
+        currentSlideIndex = slideIndex;
+        
+        if (!currentCarousel) {
+            console.error('Carrossel não encontrado:', carouselId);
+            return;
+        }
+        
+        // Definir a imagem atual no modal
+        modalImage.src = clickedImage;
+        
+        // Atualizar contador
+        const totalSlides = currentCarousel.querySelectorAll('.carousel-slide').length;
+        modalCounter.textContent = `${slideIndex + 1} / ${totalSlides}`;
+        
+        // Mostrar o modal
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        console.log('Modal aberto com sucesso');
+    }
+
+    // FUNÇÃO PARA MUDAR SLIDE NO MODAL
+    function changeModalSlide(direction) {
+        if (!currentCarousel) {
+            console.error('Nenhum carrossel ativo');
+            return;
+        }
+        
+        const slides = currentCarousel.querySelectorAll('.carousel-slide');
+        const modalImage = document.getElementById('modalImage');
+        const modalCounter = document.getElementById('modalCounter');
+        
+        // Calcular novo índice
+        let newIndex = currentSlideIndex + direction;
+        if (newIndex < 0) newIndex = slides.length - 1;
+        if (newIndex >= slides.length) newIndex = 0;
+        
+        console.log('Mudando para slide:', newIndex);
+        
+        // Encontrar a imagem no novo slide
+        const newSlide = slides[newIndex];
+        const newImage = newSlide.querySelector('img');
+        
+        if (newImage) {
+            // Atualizar imagem no modal
+            modalImage.src = newImage.src;
+            
+            // Atualizar índice atual
+            currentSlideIndex = newIndex;
+            
+            // Atualizar contador
+            modalCounter.textContent = `${newIndex + 1} / ${slides.length}`;
+            
+            // Atualizar também o carrossel principal
+            goToSlide(currentCarousel.id, newIndex);
+            
+            console.log('Slide alterado para:', newImage.src);
+        }
+    }
+
+    // FUNÇÃO PARA FECHAR MODAL
+    function closeModal() {
+        const modal = document.getElementById('imageModal');
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+        
+        // Resetar variáveis
+        currentCarousel = null;
+        currentSlideIndex = 0;
+        
+        console.log('Modal fechado');
+    }
+
+    // EVENT LISTENERS GLOBAIS
+    document.addEventListener('keydown', function(e) {
+        const modal = document.getElementById('imageModal');
+        
+        if (modal.classList.contains('active')) {
+            if (e.key === 'Escape') {
+                closeModal();
+            } else if (e.key === 'ArrowLeft') {
+                changeModalSlide(-1);
+            } else if (e.key === 'ArrowRight') {
+                changeModalSlide(1);
+            }
+        }
+    });
+
+    // Fechar modal ao clicar fora da imagem
+    document.getElementById('imageModal').addEventListener('click', function(e) {
+        if (e.target === this || e.target.classList.contains('modal-close')) {
+            closeModal();
+        }
+    });
+
+    // Verificar se tudo carregou corretamente
+    console.log('Sistema de carrossel e modal carregado');
+</script>
+</body>
+</html>
