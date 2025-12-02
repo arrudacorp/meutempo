@@ -173,9 +173,11 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
           children: [
             Icon(icone, size: 30, color: cor),
             const SizedBox(height: 8),
-            Text(
-              titulo,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            Flexible(
+              child: Text(
+                titulo,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
             ),
             Text(
               valor,
@@ -574,6 +576,8 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
         mediaDiaria: mediaDiaria,
         periodo: periodoPDF,
         nomeUsuario: nomeUsuario,
+        registros: _getRegistrosFiltrados(),
+        listaProjetos: _projetos,
         projetoFiltro: _projetoFiltro != null
             ? _getNomeProjetoFiltro()
             : null, // NOVO PARÂMETRO

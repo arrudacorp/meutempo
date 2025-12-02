@@ -71,54 +71,56 @@ class _LoginScreenState extends State<LoginScreen> {
           },
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.timer, size: 80, color: Colors.blue),
-            const SizedBox(height: 30),
-            const Text(
-              'Controle de Tempo',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 40),
-            TextField(
-              controller: _usuarioController,
-              decoration: const InputDecoration(
-                labelText: 'Usuário',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.timer, size: 80, color: Colors.blue),
+              const SizedBox(height: 30),
+              const Text(
+                'Controle de Tempo',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _senhaController,
-              decoration: const InputDecoration(
-                labelText: 'Senha',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.lock),
+              const SizedBox(height: 40),
+              TextField(
+                controller: _usuarioController,
+                decoration: const InputDecoration(
+                  labelText: 'Usuário',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person),
+                ),
               ),
-              obscureText: true,
-            ),
-            const SizedBox(height: 30),
-            SizedBox(
-              width: double.infinity,
-              child: _carregando
-                  ? const Center(child: CircularProgressIndicator())
-                  : ElevatedButton(
-                      onPressed: _fazerLogin,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Colors.blue,
+              const SizedBox(height: 20),
+              TextField(
+                controller: _senhaController,
+                decoration: const InputDecoration(
+                  labelText: 'Senha',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock),
+                ),
+                obscureText: true,
+              ),
+              const SizedBox(height: 30),
+              SizedBox(
+                width: double.infinity,
+                child: _carregando
+                    ? const Center(child: CircularProgressIndicator())
+                    : ElevatedButton(
+                        onPressed: _fazerLogin,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: Colors.blue,
+                        ),
+                        child: const Text(
+                          'ENTRAR',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
                       ),
-                      child: const Text(
-                        'ENTRAR',
-                        style: TextStyle(fontSize: 16, color: Colors.white),
-                      ),
-                    ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:meutempo/models/projeto.dart';
+import 'package:meutempo/models/tempo_gasto.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
@@ -22,9 +24,12 @@ class PdfService {
     required double mediaDiaria,
     required PeriodoPDF periodo,
     required String nomeUsuario,
+    required List<TempoGasto> registros,
+    required List<Projeto> listaProjetos,
     String? projetoFiltro,
   }) async {
     final pdf = pw.Document();
+    final _projetosParaPDF = listaProjetos;
 
     pdf.addPage(
       pw.MultiPage(
@@ -187,8 +192,12 @@ class PdfService {
 
           pw.SizedBox(height: 25),
 
+          _buildRegistrosDetalhados(registros, _projetosParaPDF, projetoFiltro),
+
+          pw.SizedBox(height: 25),
+
           // Detalhamento por Dia
-          if (tempoPorDia.isNotEmpty) ...[
+          /*if (tempoPorDia.isNotEmpty) ...[
             pw.Text(
               'DETALHAMENTO POR DIA',
               style: pw.TextStyle(
@@ -200,10 +209,10 @@ class PdfService {
             pw.SizedBox(height: 15),
             _buildTabelaDias(tempoPorDia),
             pw.SizedBox(height: 25),
-          ],
+          ],*/
 
           // Resumo
-          pw.Container(
+          /* pw.Container(
             width: double.infinity,
             padding: const pw.EdgeInsets.all(15),
             decoration: pw.BoxDecoration(
@@ -231,12 +240,229 @@ class PdfService {
                 ),
               ],
             ),
-          ),
+          ),*/
         ],
       ),
     );
 
     return pdf;
+  }
+
+  static pw.Widget _buildRegistrosDetalhados(
+    List<TempoGasto> registros,
+    List<Projeto> projetos,
+    String? projetoFiltro,
+  ) {
+    // Filtrar registros se houver filtro de projeto
+    final registrosFiltrados = projetoFiltro != null
+        ? registros.where((r) {
+            final projeto = projetos.firstWhere(
+              (p) => p.id == r.idProjeto,
+              orElse: () =>
+                  Projeto(id: 0, nomeProjeto: 'Desconhecido', ativo: true),
+            );
+            return projeto.nomeProjeto == projetoFiltro;
+          }).toList()
+        : registros;
+
+    if (registrosFiltrados.isEmpty) {
+      return pw.SizedBox();
+    }
+
+    // Ordenar por data mais recente
+    registrosFiltrados.sort((a, b) => b.dataHoraIni.compareTo(a.dataHoraIni));
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          'REGISTROS DETALHADOS',
+          style: pw.TextStyle(
+            fontSize: 16,
+            fontWeight: pw.FontWeight.bold,
+            color: PdfColors.blue600,
+          ),
+        ),
+        pw.SizedBox(height: 10),
+        pw.Text(
+          'Total de registros: ${registrosFiltrados.length}',
+          style: const pw.TextStyle(fontSize: 11),
+        ),
+        pw.SizedBox(height: 15),
+
+        // Tabela de registros
+        pw.Table(
+          border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+          columnWidths: {
+            0: const pw.FlexColumnWidth(1.5), // Data
+            1: const pw.FlexColumnWidth(1.5), // Hora Início
+            2: const pw.FlexColumnWidth(1.5), // Hora Fim
+            3: const pw.FlexColumnWidth(1.8), // Projeto
+            4: const pw.FlexColumnWidth(1), // Duração
+            5: const pw.FlexColumnWidth(2.7), // Observação
+          },
+          children: [
+            // Cabeçalho
+            pw.TableRow(
+              decoration: pw.BoxDecoration(color: PdfColors.grey200),
+              children: [
+                pw.Padding(
+                  padding: const pw.EdgeInsets.all(8),
+                  child: pw.Text(
+                    'Data',
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+                pw.Padding(
+                  padding: const pw.EdgeInsets.all(8),
+                  child: pw.Text(
+                    'Hora Início',
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+                pw.Padding(
+                  padding: const pw.EdgeInsets.all(8),
+                  child: pw.Text(
+                    'Hora Fim',
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+                pw.Padding(
+                  padding: const pw.EdgeInsets.all(8),
+                  child: pw.Text(
+                    'Projeto',
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+                pw.Padding(
+                  padding: const pw.EdgeInsets.all(8),
+                  child: pw.Text(
+                    'Duração',
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+                pw.Padding(
+                  padding: const pw.EdgeInsets.all(8),
+                  child: pw.Text(
+                    'Observação',
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // Dados dos registros
+            for (var i = 0; i < registrosFiltrados.length; i++)
+              pw.TableRow(
+                decoration: pw.BoxDecoration(
+                  color: i.isEven ? PdfColors.white : PdfColors.grey50,
+                ),
+                children: [
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(6),
+                    child: pw.Text(
+                      DateFormat(
+                        'dd/MM/yy',
+                      ).format(registrosFiltrados[i].dataHoraIni),
+                      style: const pw.TextStyle(fontSize: 8),
+                    ),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(6),
+                    child: pw.Text(
+                      DateFormat(
+                        'HH:mm',
+                      ).format(registrosFiltrados[i].dataHoraIni),
+                      style: const pw.TextStyle(fontSize: 8),
+                    ),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(6),
+                    child: pw.Text(
+                      registrosFiltrados[i].dataHoraFim != null
+                          ? DateFormat(
+                              'HH:mm',
+                            ).format(registrosFiltrados[i].dataHoraFim!)
+                          : 'Em andamento',
+                      style: pw.TextStyle(
+                        fontSize: 8,
+                        color: registrosFiltrados[i].dataHoraFim != null
+                            ? PdfColors.black
+                            : PdfColors.orange,
+                      ),
+                    ),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(6),
+                    child: pw.Text(
+                      _getNomeProjeto(
+                        registrosFiltrados[i].idProjeto,
+                        projetos,
+                      ),
+                      style: const pw.TextStyle(fontSize: 8),
+                      maxLines: 2,
+                    ),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(6),
+                    child: pw.Text(
+                      _calcularDuracaoRegistro(registrosFiltrados[i]),
+                      style: const pw.TextStyle(fontSize: 8),
+                    ),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(6),
+                    child: pw.Text(
+                      registrosFiltrados[i].observacao ?? '-',
+                      style: const pw.TextStyle(fontSize: 8),
+                      maxLines: 2,
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  static String _getNomeProjeto(int idProjeto, List<Projeto> projetos) {
+    try {
+      final projeto = projetos.firstWhere((p) => p.id == idProjeto);
+      return projeto.nomeProjeto;
+    } catch (e) {
+      return 'Projeto $idProjeto';
+    }
+  }
+
+  static String _calcularDuracaoRegistro(TempoGasto registro) {
+    if (registro.dataHoraFim == null) return '-';
+
+    final duracao = registro.dataHoraFim!.difference(registro.dataHoraIni);
+    final horas = duracao.inHours;
+    final minutos = duracao.inMinutes.remainder(60);
+
+    if (horas == 0) return '${minutos}m';
+    if (minutos == 0) return '${horas}h';
+    return '${horas}h ${minutos}m';
   }
 
   // Cores pré-definidas para evitar erros
@@ -421,7 +647,7 @@ class PdfService {
     );
   }
 
-  static pw.Widget _buildTabelaDias(Map<String, double> tempoPorDia) {
+  /*static pw.Widget _buildTabelaDias(Map<String, double> tempoPorDia) {
     final dias = tempoPorDia.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
 
@@ -489,7 +715,7 @@ class PdfService {
           ),
       ],
     );
-  }
+  }*/
 
   static pw.Widget _buildGraficoBarras(Map<String, double> tempoPorProjeto) {
     final projetos = tempoPorProjeto.entries.toList()
@@ -621,7 +847,7 @@ class PdfService {
     return '${text.substring(0, maxLength - 3)}...';
   }
 
-  static String _getTextoResumo(
+  /*static String _getTextoResumo(
     String projetoMaisUsado,
     double totalHoras,
     double mediaDiaria,
@@ -642,7 +868,7 @@ class PdfService {
     return '$nomeUsuario registrou $totalFormatado de trabalho$filtroTexto. '
         'O projeto "$projetoMaisUsado" foi o que demandou mais tempo, '
         'com uma média diária de $mediaFormatada.';
-  }
+  }*/
 
   static Future<File> savePdf(pw.Document pdf, String fileName) async {
     final bytes = await pdf.save();
