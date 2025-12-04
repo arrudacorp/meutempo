@@ -10,6 +10,11 @@ class TempoGastoDao {
     return await db.insert('tempo_gasto', tempoGasto.toMap());
   }
 
+  Future<int> deleteTempoGasto(int id) async {
+    final db = await _databaseHelper.database;
+    return await db.delete('tempo_gasto', where: 'id = ?', whereArgs: [id]);
+  }
+
   Future<List<TempoGasto>> getTempoGastoByUsuario(int idUsuario) async {
     final db = await _databaseHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(

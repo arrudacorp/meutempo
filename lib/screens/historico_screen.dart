@@ -93,6 +93,84 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
     _mostrarDialogoEdicao(registro);
   }
 
+  Future<void> _deletarRegistro(int id) async {
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar Exclusão'),
+        content: const Text(
+          'Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmado == true) {
+      try {
+        await _tempoGastoDao.deleteTempoGasto(id);
+
+        // Remove da lista local
+        setState(() {
+          _registros.removeWhere((registro) => registro.id == id);
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registro excluído com sucesso!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao excluir registro: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // NOVO: Menu de contexto
+  void _mostrarMenuContexto(TempoGasto registro) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit, color: Colors.blue),
+              title: const Text('Editar'),
+              onTap: () {
+                Navigator.pop(context);
+                _editarRegistro(registro);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete, color: Colors.red),
+              title: const Text('Excluir', style: TextStyle(color: Colors.red)),
+              onTap: () {
+                Navigator.pop(context);
+                _deletarRegistro(registro.id!);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _mostrarDialogoEdicao(TempoGasto registro) async {
     final observacaoController = TextEditingController(
       text: registro.observacao,
@@ -179,101 +257,166 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
     );
     final String nomeProjeto = _getNomeProjeto(registro.idProjeto);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return GestureDetector(
+      onLongPress: () => _mostrarMenuContexto(registro),
+      child: Dismissible(
+        key: Key(registro.id.toString()),
+        direction: DismissDirection.endToStart,
+        background: Container(
+          color: Colors.red,
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 20),
+          child: const Icon(Icons.delete, color: Colors.white, size: 30),
+        ),
+        confirmDismiss: (direction) async {
+          final confirmado = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Excluir Registro'),
+              content: const Text('Deseja realmente excluir este registro?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  child: const Text('Excluir'),
+                ),
+              ],
+            ),
+          );
+          return confirmado ?? false;
+        },
+        onDismissed: (direction) async {
+          try {
+            await _tempoGastoDao.deleteTempoGasto(registro.id!);
+
+            // Remove da lista local
+            setState(() {
+              _registros.removeWhere((r) => r.id == registro.id);
+            });
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Registro excluído com sucesso!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Erro ao excluir registro: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+            // Se der erro, recarrega a lista
+            _carregarDados();
+          }
+        },
+        child: Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(
-                    nomeProjeto,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        nomeProjeto,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: finalizado
+                            ? Colors.green.shade50
+                            : Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        finalizado ? 'Finalizado' : 'Em Andamento',
+                        style: TextStyle(
+                          color: finalizado ? Colors.green : Colors.orange,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Início: ${_formatarData(registro.dataHoraIni)}',
+                  style: const TextStyle(fontSize: 14),
+                ),
+                if (finalizado) ...[
+                  Text(
+                    'Fim: ${_formatarData(registro.dataHoraFim!)}',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  Text(
+                    'Duração: $duracao',
                     style: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
+                      color: Colors.blue,
                     ),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: finalizado
-                        ? Colors.green.shade50
-                        : Colors.orange.shade50,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    finalizado ? 'Finalizado' : 'Em Andamento',
-                    style: TextStyle(
-                      color: finalizado ? Colors.green : Colors.orange,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                ],
+                if (registro.observacao != null &&
+                    registro.observacao!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Observação: ${registro.observacao}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontStyle: FontStyle.italic,
                     ),
                   ),
+                ],
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    if (!finalizado)
+                      ElevatedButton(
+                        onPressed: () => _finalizarRegistro(registro.id!),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                        ),
+                        child: const Text(
+                          'Finalizar',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.edit, size: 20),
+                      onPressed: () => _editarRegistro(registro),
+                      tooltip: 'Editar',
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      onPressed: () => _deletarRegistro(registro.id!),
+                      tooltip: 'Excluir',
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Início: ${_formatarData(registro.dataHoraIni)}',
-              style: const TextStyle(fontSize: 14),
-            ),
-            if (finalizado) ...[
-              Text(
-                'Fim: ${_formatarData(registro.dataHoraFim!)}',
-                style: const TextStyle(fontSize: 14),
-              ),
-              Text(
-                'Duração: $duracao',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                ),
-              ),
-            ],
-            if (registro.observacao != null &&
-                registro.observacao!.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Observação: ${registro.observacao}',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                if (!finalizado)
-                  ElevatedButton(
-                    onPressed: () => _finalizarRegistro(registro.id!),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                    ),
-                    child: const Text(
-                      'Finalizar',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.edit, size: 20),
-                  onPressed: () => _editarRegistro(registro),
-                  tooltip: 'Editar',
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -282,16 +425,21 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("Histórico de Registros"),
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: Icon(Icons.refresh),
+            tooltip: 'Recarregar',
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Histórico de Registros',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
             if (_carregando)
               const Expanded(
                 child: Center(
