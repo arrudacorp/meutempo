@@ -1,4 +1,3 @@
-import 'package:sqflite/sqflite.dart';
 import 'database.dart';
 import 'tempo_gasto.dart';
 

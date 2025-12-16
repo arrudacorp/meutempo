@@ -38,4 +38,22 @@ class TempoGasto {
       observacao: map['observacao'],
     );
   }
+
+  TempoGasto copyWith({
+    int? id,
+    int? idProjeto,
+    int? idUsuario,
+    DateTime? dataHoraIni,
+    DateTime? dataHoraFim,
+    String? observacao,
+  }) {
+    return TempoGasto(
+      id: id ?? this.id,
+      idProjeto: idProjeto ?? this.idProjeto,
+      idUsuario: idUsuario ?? this.idUsuario,
+      dataHoraIni: dataHoraIni ?? this.dataHoraIni,
+      dataHoraFim: dataHoraFim ?? this.dataHoraFim,
+      observacao: observacao ?? this.observacao,
+    );
+  }
 }

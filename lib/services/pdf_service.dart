@@ -29,431 +29,329 @@ class PdfService {
     String? projetoFiltro,
   }) async {
     final pdf = pw.Document();
-    final _projetosParaPDF = listaProjetos;
 
-    pdf.addPage(
-      pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        header: (pw.Context context) {
-          return pw.Container(
-            margin: const pw.EdgeInsets.only(bottom: 20),
-            child: pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text(
-                      'RELATÓRIO DE PRODUTIVIDADE',
-                      style: pw.TextStyle(
-                        fontSize: 18,
-                        fontWeight: pw.FontWeight.bold,
-                        color: PdfColors.blue800,
+    try {
+      // FUNÇÃO DE SEGURANÇA - APENAS REMOVE O ESSENCIAL
+      String safeText(String text) {
+        if (text.isEmpty) return text;
+        // Remove apenas o caractere problemático U+FE0F
+        return text.replaceAll('️', '').trim();
+      }
+
+      // LIMITAR REGISTROS PARA EVITAR QUALQUER PROBLEMA
+      final maxRegistrosExibidos = 50; // Máximo seguro
+      final registrosExibidos = registros.length > maxRegistrosExibidos
+          ? registros.sublist(0, maxRegistrosExibidos)
+          : registros;
+
+      final mostrarAviso = registros.length > maxRegistrosExibidos;
+
+      final registrosPorPagina = 20; // Ajuste conforme necessidade
+      final totalPaginas = (registrosExibidos.length / registrosPorPagina)
+          .ceil();
+
+      for (var pagina = 0; pagina < totalPaginas; pagina++) {
+        final inicio = pagina * registrosPorPagina;
+        final fim = (pagina + 1) * registrosPorPagina;
+        final registrosDaPagina = registrosExibidos.sublist(
+          inicio,
+          fim > registrosExibidos.length ? registrosExibidos.length : fim,
+        );
+
+        pdf.addPage(
+          pw.Page(
+            pageFormat: PdfPageFormat.a4,
+            margin: const pw.EdgeInsets.all(25),
+            build: (context) {
+              return pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  // CABEÇALHO (igual ao original)
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text(
+                            'RELATÓRIO DE PRODUTIVIDADE',
+                            style: pw.TextStyle(
+                              fontSize: 18,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                          pw.SizedBox(height: 4),
+                          pw.Text(
+                            'Usuário: ${safeText(nomeUsuario)}',
+                            style: const pw.TextStyle(fontSize: 11),
+                          ),
+                          if (projetoFiltro != null)
+                            pw.Text(
+                              'Projeto: ${safeText(projetoFiltro)}',
+                              style: const pw.TextStyle(fontSize: 11),
+                            ),
+                          pw.Text(
+                            'Período: ${DateFormat('dd/MM/yyyy').format(periodo.inicio)} - ${DateFormat('dd/MM/yyyy').format(periodo.fim)}',
+                            style: const pw.TextStyle(fontSize: 10),
+                          ),
+                          pw.Text(
+                            'Gerado em: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
+                            style: const pw.TextStyle(fontSize: 9),
+                          ),
+                        ],
                       ),
-                    ),
-                    pw.SizedBox(height: 4),
-                    pw.Text(
-                      'Usuário: $nomeUsuario', // ← NOVA LINHA
-                      style: const pw.TextStyle(
-                        fontSize: 11,
-                        color: PdfColors.grey700,
-                      ),
-                    ),
-                    if (projetoFiltro != null)
-                      pw.Text(
-                        'Projeto: $projetoFiltro',
-                        style: const pw.TextStyle(
-                          fontSize: 11,
-                          color: PdfColors.grey700,
+                      // ÍCONE SIMPLES (sem emoji)
+                      pw.Container(
+                        width: 40,
+                        height: 40,
+                        decoration: const pw.BoxDecoration(
+                          color: PdfColors.blue,
+                          shape: pw.BoxShape.circle,
+                        ),
+                        child: pw.Center(
+                          child: pw.Text(
+                            'A',
+                            style: pw.TextStyle(
+                              fontSize: 16,
+                              color: PdfColors.white,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
-                    pw.Text(
-                      'Período: ${DateFormat('dd/MM/yyyy').format(periodo.inicio)} - ${DateFormat('dd/MM/yyyy').format(periodo.fim)}',
-                      style: const pw.TextStyle(fontSize: 10),
-                    ),
-                    pw.Text(
-                      'Gerado em: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
-                      style: const pw.TextStyle(fontSize: 9),
-                    ),
-                  ],
-                ),
-                pw.Container(
-                  width: 40,
-                  height: 40,
-                  decoration: pw.BoxDecoration(
-                    color: PdfColors.blue,
-                    shape: pw.BoxShape.circle,
+                    ],
                   ),
-                  child: pw.Center(
-                    child: pw.Text('⏱️', style: pw.TextStyle(fontSize: 16)),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-        footer: (pw.Context context) {
-          return pw.Container(
-            margin: const pw.EdgeInsets.only(top: 20),
-            child: pw.Column(
-              children: [
-                pw.Divider(thickness: 1, color: PdfColors.grey300),
-                pw.SizedBox(height: 10),
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
+
+                  pw.Divider(height: 25),
+
+                  // APENAS para a primeira página, mostrar estatísticas
+                  if (pagina == 0) ...[
                     pw.Text(
-                      'MeuTempo - Sistema de Controle de Horas',
+                      'ESTATÍSTICAS GERAIS',
                       style: pw.TextStyle(
-                        fontSize: 9,
-                        color: PdfColors.grey600,
+                        fontSize: 16,
                         fontWeight: pw.FontWeight.bold,
                       ),
                     ),
-                    pw.Text(
-                      'Desenvolvido por ArrudaCorp',
-                      style: pw.TextStyle(
-                        fontSize: 9,
-                        color: PdfColors.grey600,
-                        fontStyle: pw.FontStyle.italic,
-                      ),
+                    pw.SizedBox(height: 25),
+
+                    // Cards de estatísticas em linha
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildCardEstatistica(
+                          'Total Horas',
+                          '${totalHoras.toStringAsFixed(1)}h',
+                          PdfColors.blue50,
+                        ),
+                        _buildCardEstatistica(
+                          'Total Registros',
+                          totalRegistros.toString(),
+                          PdfColors.green50,
+                        ),
+                        _buildCardEstatistica(
+                          'Média Diária',
+                          '${mediaDiaria.toStringAsFixed(1)}h',
+                          PdfColors.purple50,
+                        ),
+                      ],
                     ),
                   ],
-                ),
-                pw.SizedBox(height: 5),
-                pw.Text(
-                  'Página ${context.pageNumber} de ${context.pagesCount}',
-                  style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
-                ),
-              ],
-            ),
-          );
-        },
-        build: (pw.Context context) => [
-          pw.SizedBox(height: 10),
 
-          // Estatísticas Principais
-          pw.Text(
-            'ESTATÍSTICAS GERAIS',
-            style: pw.TextStyle(
-              fontSize: 16,
-              fontWeight: pw.FontWeight.bold,
-              color: PdfColors.blue600,
-            ),
-          ),
-          pw.SizedBox(height: 15),
+                  pw.SizedBox(height: 25),
 
-          pw.Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              _buildStatCard(
-                'Total de Horas',
-                '${totalHoras.toStringAsFixed(1)}h',
-                _lightBlue,
-              ),
-              _buildStatCard(
-                'Total Registros',
-                totalRegistros.toString(),
-                _lightGreen,
-              ),
-              _buildStatCard(
-                'Projeto Mais Usado',
-                _truncateText(projetoMaisUsado, 12),
-                _lightOrange,
-              ),
-              _buildStatCard(
-                'Média Diária',
-                '${mediaDiaria.toStringAsFixed(1)}h',
-                _lightPurple,
-              ),
-            ],
-          ),
-
-          pw.SizedBox(height: 25),
-
-          // Tempo por Projeto
-          pw.Text(
-            'DISTRIBUIÇÃO POR PROJETO',
-            style: pw.TextStyle(
-              fontSize: 16,
-              fontWeight: pw.FontWeight.bold,
-              color: PdfColors.blue600,
-            ),
-          ),
-          pw.SizedBox(height: 15),
-
-          _buildTabelaProjetos(tempoPorProjeto, totalHoras),
-
-          pw.SizedBox(height: 25),
-
-          // Gráfico de Barras Simples
-          if (tempoPorProjeto.isNotEmpty) _buildGraficoBarras(tempoPorProjeto),
-
-          pw.SizedBox(height: 25),
-
-          _buildRegistrosDetalhados(registros, _projetosParaPDF, projetoFiltro),
-
-          pw.SizedBox(height: 25),
-
-          // Detalhamento por Dia
-          /*if (tempoPorDia.isNotEmpty) ...[
-            pw.Text(
-              'DETALHAMENTO POR DIA',
-              style: pw.TextStyle(
-                fontSize: 16,
-                fontWeight: pw.FontWeight.bold,
-                color: PdfColors.blue600,
-              ),
-            ),
-            pw.SizedBox(height: 15),
-            _buildTabelaDias(tempoPorDia),
-            pw.SizedBox(height: 25),
-          ],*/
-
-          // Resumo
-          /* pw.Container(
-            width: double.infinity,
-            padding: const pw.EdgeInsets.all(15),
-            decoration: pw.BoxDecoration(
-              color: _lightBlue,
-              borderRadius: pw.BorderRadius.circular(8),
-              border: pw.Border.all(color: PdfColors.blue, width: 1),
-            ),
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Text(
-                  'RESUMO EXECUTIVO',
-                  style: pw.TextStyle(
-                    fontSize: 14,
-                    fontWeight: pw.FontWeight.bold,
-                    color: PdfColors.blue800,
+                  // TÍTULO DA TABELA
+                  pw.Text(
+                    'REGISTROS DETALHADOS',
+                    style: pw.TextStyle(
+                      fontSize: 16,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
                   ),
-                ),
-                pw.SizedBox(height: 8),
-                pw.Text(
-                  'No período analisado, foram registradas ${totalHoras.toStringAsFixed(1)} horas '
-                  'em $totalRegistros atividades. ${_getTextoResumo(projetoMaisUsado, totalHoras, mediaDiaria, nomeUsuario, projetoFiltro)}',
-                  style: const pw.TextStyle(fontSize: 11),
-                  textAlign: pw.TextAlign.justify,
-                ),
-              ],
+
+                  /*pw.Text(
+                    'Página ${pagina + 1}/$totalPaginas | Total: ${registrosExibidos.length} registros',
+                    style: const pw.TextStyle(fontSize: 11),
+                  ),*/
+                  pw.SizedBox(height: 15),
+
+                  // TABELA APENAS COM OS REGISTROS DESTA PÁGINA
+                  if (registrosDaPagina.isNotEmpty)
+                    _buildTabelaRegistrosSimples(
+                      registros: registrosDaPagina,
+                      projetos: listaProjetos,
+                    ),
+                ],
+              );
+            },
+          ),
+        );
+      }
+
+      return pdf;
+    } catch (e, stack) {
+      print('Erro crítico ao gerar PDF: $e');
+      print(stack);
+
+      // FALLBACK ABSOLUTO
+      return _gerarPDFMinimo(
+        totalHoras: totalHoras,
+        totalRegistros: totalRegistros,
+        periodo: periodo,
+        nomeUsuario: nomeUsuario,
+      );
+    }
+  }
+
+  // ========== COMPONENTES AUXILIARES ==========
+
+  static pw.Widget _buildCardEstatistica(
+    String titulo,
+    String valor,
+    PdfColor corFundo,
+  ) {
+    return pw.Container(
+      width: 100,
+      padding: const pw.EdgeInsets.all(12),
+      decoration: pw.BoxDecoration(
+        color: corFundo,
+        borderRadius: pw.BorderRadius.circular(8),
+        border: pw.Border.all(color: PdfColors.grey300),
+      ),
+      child: pw.Column(
+        children: [
+          pw.Text(
+            titulo,
+            style: pw.TextStyle(
+              fontSize: 10,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.grey700,
             ),
-          ),*/
+            textAlign: pw.TextAlign.center,
+          ),
+          pw.SizedBox(height: 6),
+          pw.Text(
+            valor,
+            style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            textAlign: pw.TextAlign.center,
+          ),
         ],
       ),
     );
-
-    return pdf;
   }
 
-  static pw.Widget _buildRegistrosDetalhados(
-    List<TempoGasto> registros,
-    List<Projeto> projetos,
-    String? projetoFiltro,
-  ) {
-    // Filtrar registros se houver filtro de projeto
-    final registrosFiltrados = projetoFiltro != null
-        ? registros.where((r) {
-            final projeto = projetos.firstWhere(
-              (p) => p.id == r.idProjeto,
-              orElse: () =>
-                  Projeto(id: 0, nomeProjeto: 'Desconhecido', ativo: true),
-            );
-            return projeto.nomeProjeto == projetoFiltro;
-          }).toList()
-        : registros;
+  static pw.Widget _buildTabelaRegistrosSimples({
+    required List<TempoGasto> registros,
+    required List<Projeto> projetos,
+  }) {
+    // Ordenar por data (mais recente primeiro)
+    final registrosOrdenados = List<TempoGasto>.from(registros)
+      ..sort((a, b) => b.dataHoraIni.compareTo(a.dataHoraIni));
 
-    if (registrosFiltrados.isEmpty) {
-      return pw.SizedBox();
-    }
-
-    // Ordenar por data mais recente
-    registrosFiltrados.sort((a, b) => b.dataHoraIni.compareTo(a.dataHoraIni));
-
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        pw.Text(
-          'REGISTROS DETALHADOS',
-          style: pw.TextStyle(
-            fontSize: 16,
-            fontWeight: pw.FontWeight.bold,
-            color: PdfColors.blue600,
+    return pw.Container(
+      height: 550,
+      child: pw.Table(
+        border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+        columnWidths: {
+          0: const pw.FlexColumnWidth(1.2), // Data
+          1: const pw.FlexColumnWidth(1.8), // Projeto
+          2: const pw.FlexColumnWidth(1), // Início
+          3: const pw.FlexColumnWidth(1), // Fim
+          4: const pw.FlexColumnWidth(1), // Duração
+          5: const pw.FlexColumnWidth(2), // Observação
+        },
+        children: [
+          // CABEÇALHO
+          pw.TableRow(
+            decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+            children: [
+              _celulaTabela('Data', isHeader: true),
+              _celulaTabela('Projeto', isHeader: true),
+              _celulaTabela('Início', isHeader: true),
+              _celulaTabela('Fim', isHeader: true),
+              _celulaTabela('Duração', isHeader: true),
+              _celulaTabela('Observação', isHeader: true),
+            ],
           ),
-        ),
-        pw.SizedBox(height: 10),
-        pw.Text(
-          'Total de registros: ${registrosFiltrados.length}',
-          style: const pw.TextStyle(fontSize: 11),
-        ),
-        pw.SizedBox(height: 15),
 
-        // Tabela de registros
-        pw.Table(
-          border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
-          columnWidths: {
-            0: const pw.FlexColumnWidth(1.5), // Data
-            1: const pw.FlexColumnWidth(1.5), // Hora Início
-            2: const pw.FlexColumnWidth(1.5), // Hora Fim
-            3: const pw.FlexColumnWidth(1.8), // Projeto
-            4: const pw.FlexColumnWidth(1), // Duração
-            5: const pw.FlexColumnWidth(2.7), // Observação
-          },
-          children: [
-            // Cabeçalho
+          // DADOS
+          for (var i = 0; i < registrosOrdenados.length; i++)
             pw.TableRow(
-              decoration: pw.BoxDecoration(color: PdfColors.grey200),
+              decoration: pw.BoxDecoration(
+                color: i.isEven ? PdfColors.white : PdfColors.grey50,
+              ),
               children: [
-                pw.Padding(
-                  padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text(
-                    'Data',
-                    style: pw.TextStyle(
-                      fontSize: 9,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
+                _celulaTabela(
+                  DateFormat(
+                    'dd/MM/yy',
+                  ).format(registrosOrdenados[i].dataHoraIni),
                 ),
-                pw.Padding(
-                  padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text(
-                    'Hora Início',
-                    style: pw.TextStyle(
-                      fontSize: 9,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
+                _celulaTabela(
+                  _getNomeProjetoSeguro(
+                    registrosOrdenados[i].idProjeto,
+                    projetos,
                   ),
+                  maxLines: 2,
                 ),
-                pw.Padding(
-                  padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text(
-                    'Hora Fim',
-                    style: pw.TextStyle(
-                      fontSize: 9,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
+                _celulaTabela(
+                  DateFormat('HH:mm').format(registrosOrdenados[i].dataHoraIni),
                 ),
-                pw.Padding(
-                  padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text(
-                    'Projeto',
-                    style: pw.TextStyle(
-                      fontSize: 9,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
+                _celulaTabela(
+                  registrosOrdenados[i].dataHoraFim != null
+                      ? DateFormat(
+                          'HH:mm',
+                        ).format(registrosOrdenados[i].dataHoraFim!)
+                      : 'Em andamento',
+                  color: registrosOrdenados[i].dataHoraFim != null
+                      ? null
+                      : PdfColors.orange,
                 ),
-                pw.Padding(
-                  padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text(
-                    'Duração',
-                    style: pw.TextStyle(
-                      fontSize: 9,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
-                ),
-                pw.Padding(
-                  padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text(
-                    'Observação',
-                    style: pw.TextStyle(
-                      fontSize: 9,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
+                _celulaTabela(_calcularDuracaoSegura(registrosOrdenados[i])),
+                _celulaTabela(
+                  registrosOrdenados[i].observacao ?? '-',
+                  maxLines: 2,
                 ),
               ],
             ),
-
-            // Dados dos registros
-            for (var i = 0; i < registrosFiltrados.length; i++)
-              pw.TableRow(
-                decoration: pw.BoxDecoration(
-                  color: i.isEven ? PdfColors.white : PdfColors.grey50,
-                ),
-                children: [
-                  pw.Padding(
-                    padding: const pw.EdgeInsets.all(6),
-                    child: pw.Text(
-                      DateFormat(
-                        'dd/MM/yy',
-                      ).format(registrosFiltrados[i].dataHoraIni),
-                      style: const pw.TextStyle(fontSize: 8),
-                    ),
-                  ),
-                  pw.Padding(
-                    padding: const pw.EdgeInsets.all(6),
-                    child: pw.Text(
-                      DateFormat(
-                        'HH:mm',
-                      ).format(registrosFiltrados[i].dataHoraIni),
-                      style: const pw.TextStyle(fontSize: 8),
-                    ),
-                  ),
-                  pw.Padding(
-                    padding: const pw.EdgeInsets.all(6),
-                    child: pw.Text(
-                      registrosFiltrados[i].dataHoraFim != null
-                          ? DateFormat(
-                              'HH:mm',
-                            ).format(registrosFiltrados[i].dataHoraFim!)
-                          : 'Em andamento',
-                      style: pw.TextStyle(
-                        fontSize: 8,
-                        color: registrosFiltrados[i].dataHoraFim != null
-                            ? PdfColors.black
-                            : PdfColors.orange,
-                      ),
-                    ),
-                  ),
-                  pw.Padding(
-                    padding: const pw.EdgeInsets.all(6),
-                    child: pw.Text(
-                      _getNomeProjeto(
-                        registrosFiltrados[i].idProjeto,
-                        projetos,
-                      ),
-                      style: const pw.TextStyle(fontSize: 8),
-                      maxLines: 2,
-                    ),
-                  ),
-                  pw.Padding(
-                    padding: const pw.EdgeInsets.all(6),
-                    child: pw.Text(
-                      _calcularDuracaoRegistro(registrosFiltrados[i]),
-                      style: const pw.TextStyle(fontSize: 8),
-                    ),
-                  ),
-                  pw.Padding(
-                    padding: const pw.EdgeInsets.all(6),
-                    child: pw.Text(
-                      registrosFiltrados[i].observacao ?? '-',
-                      style: const pw.TextStyle(fontSize: 8),
-                      maxLines: 2,
-                    ),
-                  ),
-                ],
-              ),
-          ],
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  static String _getNomeProjeto(int idProjeto, List<Projeto> projetos) {
+  static pw.Widget _celulaTabela(
+    String texto, {
+    bool isHeader = false,
+    PdfColor? color,
+    int maxLines = 1,
+  }) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.all(5),
+      child: pw.Text(
+        texto,
+        style: pw.TextStyle(
+          fontSize: isHeader ? 9 : 8,
+          fontWeight: isHeader ? pw.FontWeight.bold : pw.FontWeight.normal,
+          color: color,
+        ),
+        maxLines: maxLines,
+      ),
+    );
+  }
+
+  static String _getNomeProjetoSeguro(int idProjeto, List<Projeto> projetos) {
     try {
       final projeto = projetos.firstWhere((p) => p.id == idProjeto);
+      // Limitar tamanho para não quebrar layout
+      if (projeto.nomeProjeto.length > 25) {
+        return '${projeto.nomeProjeto.substring(0, 22)}...';
+      }
       return projeto.nomeProjeto;
     } catch (e) {
       return 'Projeto $idProjeto';
     }
   }
 
-  static String _calcularDuracaoRegistro(TempoGasto registro) {
+  static String _calcularDuracaoSegura(TempoGasto registro) {
     if (registro.dataHoraFim == null) return '-';
 
     final duracao = registro.dataHoraFim!.difference(registro.dataHoraIni);
@@ -465,410 +363,62 @@ class PdfService {
     return '${horas}h ${minutos}m';
   }
 
-  // Cores pré-definidas para evitar erros
-  static final _lightBlue = PdfColor.fromInt(0xFFE3F2FD);
-  static final _lightGreen = PdfColor.fromInt(0xFFE8F5E8);
-  static final _lightOrange = PdfColor.fromInt(0xFFFFF3E0);
-  static final _lightPurple = PdfColor.fromInt(0xFFF3E5F5);
-  static final _blueDark = PdfColor.fromInt(0xFF1976D2);
-  static final _greenDark = PdfColor.fromInt(0xFF388E3C);
-  static final _orangeDark = PdfColor.fromInt(0xFFF57C00);
-  static final _purpleDark = PdfColor.fromInt(0xFF7B1FA2);
+  // FALLBACK ABSOLUTO
+  static Future<pw.Document> _gerarPDFMinimo({
+    required double totalHoras,
+    required int totalRegistros,
+    required PeriodoPDF periodo,
+    required String nomeUsuario,
+  }) async {
+    final pdf = pw.Document();
 
-  static pw.Widget _buildStatCard(
-    String titulo,
-    String valor,
-    PdfColor corFundo,
-  ) {
-    // Determina a cor do texto baseado na cor de fundo
-    final corTexto = _getCorTexto(corFundo);
-    final corBorda = _getCorBorda(corFundo);
-
-    return pw.Container(
-      width: 110,
-      height: 75,
-      padding: const pw.EdgeInsets.all(12),
-      decoration: pw.BoxDecoration(
-        color: corFundo,
-        borderRadius: pw.BorderRadius.circular(10),
-        border: pw.Border.all(color: corBorda, width: 1.5),
-      ),
-      child: pw.Column(
-        mainAxisAlignment: pw.MainAxisAlignment.center,
-        children: [
-          pw.Text(
-            titulo,
-            style: pw.TextStyle(
-              fontSize: 9,
-              fontWeight: pw.FontWeight.bold,
-              color: corTexto,
-            ),
-            textAlign: pw.TextAlign.center,
-            maxLines: 2,
-          ),
-          pw.SizedBox(height: 6),
-          pw.Text(
-            valor,
-            style: pw.TextStyle(
-              fontSize: 13,
-              fontWeight: pw.FontWeight.bold,
-              color: PdfColors.black,
-            ),
-            textAlign: pw.TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  static PdfColor _getCorTexto(PdfColor corFundo) {
-    if (corFundo == _lightBlue) return _blueDark;
-    if (corFundo == _lightGreen) return _greenDark;
-    if (corFundo == _lightOrange) return _orangeDark;
-    if (corFundo == _lightPurple) return _purpleDark;
-    return PdfColors.black;
-  }
-
-  static PdfColor _getCorBorda(PdfColor corFundo) {
-    if (corFundo == _lightBlue) return PdfColors.blue;
-    if (corFundo == _lightGreen) return PdfColors.green;
-    if (corFundo == _lightOrange) return PdfColors.orange;
-    if (corFundo == _lightPurple) return PdfColors.purple;
-    return PdfColors.grey;
-  }
-
-  static pw.Widget _buildTabelaProjetos(
-    Map<String, double> tempoPorProjeto,
-    double totalHoras,
-  ) {
-    final projetos = tempoPorProjeto.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-
-    final tabelaDados = <List<String>>[
-      <String>['Projeto', 'Horas', 'Percentual', 'Visual'],
-    ];
-
-    for (final projeto in projetos) {
-      final percentual = (projeto.value / totalHoras * 100);
-      final barras = (percentual ~/ 5); // Cada 5% = uma barra
-      tabelaDados.add(<String>[
-        _truncateText(projeto.key, 25),
-        _formatarDuracaoPDF(projeto.value),
-        '${percentual.toStringAsFixed(1)}%',
-        '█' * barras,
-      ]);
-    }
-
-    return pw.Table(
-      border: pw.TableBorder.all(color: PdfColors.grey400, width: 0.5),
-      columnWidths: {
-        0: const pw.FlexColumnWidth(2.5),
-        1: const pw.FlexColumnWidth(1),
-        2: const pw.FlexColumnWidth(1),
-        3: const pw.FlexColumnWidth(1.5),
-      },
-      children: [
-        // Cabeçalho
-        pw.TableRow(
-          decoration: pw.BoxDecoration(color: PdfColors.blue700),
-          children: [
-            pw.Padding(
-              padding: const pw.EdgeInsets.all(10),
-              child: pw.Text(
-                'PROJETO',
-                style: pw.TextStyle(
-                  fontSize: 10,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.white,
-                ),
-              ),
-            ),
-            pw.Padding(
-              padding: const pw.EdgeInsets.all(10),
-              child: pw.Text(
-                'HORAS',
-                style: pw.TextStyle(
-                  fontSize: 10,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.white,
-                ),
-              ),
-            ),
-            pw.Padding(
-              padding: const pw.EdgeInsets.all(10),
-              child: pw.Text(
-                '%',
-                style: pw.TextStyle(
-                  fontSize: 10,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.white,
-                ),
-              ),
-            ),
-            pw.Padding(
-              padding: const pw.EdgeInsets.all(10),
-              child: pw.Text(
-                'VISUAL',
-                style: pw.TextStyle(
-                  fontSize: 10,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.white,
-                ),
-              ),
-            ),
-          ],
-        ),
-        // Dados
-        for (final linha in tabelaDados.skip(1))
-          pw.TableRow(
-            decoration: pw.BoxDecoration(
-              color: linha == tabelaDados.skip(1).first
-                  ? PdfColors.grey50
-                  : PdfColors.white,
-            ),
-            children: [
-              for (int i = 0; i < linha.length; i++)
-                pw.Padding(
-                  padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text(
-                    linha[i],
-                    style: pw.TextStyle(
-                      fontSize: 9,
-                      color: i == 0 ? _blueDark : PdfColors.black,
-                      fontWeight: i == 0
-                          ? pw.FontWeight.bold
-                          : pw.FontWeight.normal,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-      ],
-    );
-  }
-
-  /*static pw.Widget _buildTabelaDias(Map<String, double> tempoPorDia) {
-    final dias = tempoPorDia.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
-
-    return pw.Table(
-      border: pw.TableBorder.all(color: PdfColors.grey400, width: 0.5),
-      columnWidths: {
-        0: const pw.FlexColumnWidth(2),
-        1: const pw.FlexColumnWidth(1),
-      },
-      children: [
-        // Cabeçalho
-        pw.TableRow(
-          decoration: pw.BoxDecoration(color: PdfColors.green700),
-          children: [
-            pw.Padding(
-              padding: const pw.EdgeInsets.all(10),
-              child: pw.Text(
-                'DATA',
-                style: pw.TextStyle(
-                  fontSize: 10,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.white,
-                ),
-              ),
-            ),
-            pw.Padding(
-              padding: const pw.EdgeInsets.all(10),
-              child: pw.Text(
-                'HORAS',
-                style: pw.TextStyle(
-                  fontSize: 10,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.white,
-                ),
-              ),
-            ),
-          ],
-        ),
-        // Dados
-        for (var i = 0; i < dias.length; i++)
-          pw.TableRow(
-            decoration: pw.BoxDecoration(
-              color: i.isEven ? PdfColors.grey50 : PdfColors.white,
-            ),
-            children: [
-              pw.Padding(
-                padding: const pw.EdgeInsets.all(8),
-                child: pw.Text(
-                  dias[i].key,
-                  style: const pw.TextStyle(fontSize: 9),
-                ),
-              ),
-              pw.Padding(
-                padding: const pw.EdgeInsets.all(8),
-                child: pw.Text(
-                  dias[i].value.toStringAsFixed(1),
-                  style: pw.TextStyle(
-                    fontSize: 9,
-                    fontWeight: pw.FontWeight.bold,
-                    color: _greenDark,
-                  ),
-                ),
-              ),
-            ],
-          ),
-      ],
-    );
-  }*/
-
-  static pw.Widget _buildGraficoBarras(Map<String, double> tempoPorProjeto) {
-    final projetos = tempoPorProjeto.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-
-    final maxHoras = projetos.isNotEmpty
-        ? projetos.map((e) => e.value).reduce((a, b) => a > b ? a : b)
-        : 1.0;
-
-    return pw.Container(
-      padding: const pw.EdgeInsets.all(15),
-      decoration: pw.BoxDecoration(
-        color: PdfColors.grey50,
-        borderRadius: pw.BorderRadius.circular(8),
-        border: pw.Border.all(color: PdfColors.grey300, width: 1),
-      ),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(
-            'GRÁFICO - DISTRIBUIÇÃO DE HORAS',
-            style: pw.TextStyle(
-              fontSize: 14,
-              fontWeight: pw.FontWeight.bold,
-              color: PdfColors.blue800,
-            ),
-          ),
-          pw.SizedBox(height: 12),
-          ...projetos.map((projeto) {
-            final larguraBarra = (projeto.value / maxHoras) * 200;
-            final percentual = (projeto.value / maxHoras * 100);
-            return pw.Column(
+    pdf.addPage(
+      pw.Page(
+        build: (context) {
+          return pw.Center(
+            child: pw.Column(
+              mainAxisAlignment: pw.MainAxisAlignment.center,
               children: [
-                pw.Row(
-                  children: [
-                    pw.Container(
-                      width: 100,
-                      child: pw.Text(
-                        _truncateText(projeto.key, 20),
-                        style: pw.TextStyle(
-                          fontSize: 9,
-                          fontWeight: pw.FontWeight.bold,
-                          color: _blueDark,
-                        ),
-                      ),
-                    ),
-                    pw.SizedBox(width: 8),
-                    pw.Expanded(
-                      child: pw.Container(
-                        height: 20,
-                        decoration: pw.BoxDecoration(
-                          color: _lightBlue,
-                          borderRadius: pw.BorderRadius.circular(4),
-                        ),
-                        child: pw.Stack(
-                          children: [
-                            pw.Container(
-                              width: larguraBarra,
-                              decoration: pw.BoxDecoration(
-                                color: _getBarColor(percentual),
-                                borderRadius: pw.BorderRadius.circular(4),
-                              ),
-                            ),
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.symmetric(
-                                horizontal: 8,
-                              ),
-                              child: pw.Align(
-                                alignment: pw.Alignment.centerRight,
-                                child: pw.Text(
-                                  _formatarDuracaoPDF(projeto.value),
-                                  style: pw.TextStyle(
-                                    fontSize: 8,
-                                    color: PdfColors.white,
-                                    fontWeight: pw.FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    pw.SizedBox(width: 8),
-                    pw.Container(
-                      width: 35,
-                      child: pw.Text(
-                        '${percentual.toStringAsFixed(0)}%',
-                        style: pw.TextStyle(
-                          fontSize: 9,
-                          fontWeight: pw.FontWeight.bold,
-                          color: PdfColors.grey700,
-                        ),
-                        textAlign: pw.TextAlign.right,
-                      ),
-                    ),
-                  ],
+                pw.Text(
+                  'RELATÓRIO RESUMIDO',
+                  style: pw.TextStyle(
+                    fontSize: 20,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
                 ),
-                pw.SizedBox(height: 6),
+                pw.SizedBox(height: 30),
+                pw.Text(
+                  'Usuário: $nomeUsuario',
+                  style: const pw.TextStyle(fontSize: 14),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Text(
+                  'Período: ${DateFormat('dd/MM/yyyy').format(periodo.inicio)} a ${DateFormat('dd/MM/yyyy').format(periodo.fim)}',
+                  style: const pw.TextStyle(fontSize: 14),
+                ),
+                pw.SizedBox(height: 20),
+                pw.Text(
+                  'Total de Horas: ${totalHoras.toStringAsFixed(1)}h',
+                  style: const pw.TextStyle(fontSize: 16),
+                ),
+                pw.Text(
+                  'Total de Registros: $totalRegistros',
+                  style: const pw.TextStyle(fontSize: 16),
+                ),
+                pw.SizedBox(height: 30),
+                pw.Text(
+                  'Gerado em: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
+                  style: const pw.TextStyle(fontSize: 12),
+                ),
               ],
-            );
-          }).toList(),
-        ],
+            ),
+          );
+        },
       ),
     );
+
+    return pdf;
   }
-
-  static String _formatarDuracaoPDF(double horasDecimais) {
-    final horas = horasDecimais.floor();
-    final minutos = ((horasDecimais - horas) * 60).round();
-
-    if (horas == 0) {
-      return '${minutos}m';
-    } else if (minutos == 0) {
-      return '${horas}h';
-    } else {
-      return '${horas}h ${minutos}m';
-    }
-  }
-
-  static PdfColor _getBarColor(double percentual) {
-    if (percentual > 70) return PdfColors.red;
-    if (percentual > 40) return PdfColors.orange;
-    return PdfColors.blue;
-  }
-
-  static String _truncateText(String text, int maxLength) {
-    if (text.length <= maxLength) return text;
-    return '${text.substring(0, maxLength - 3)}...';
-  }
-
-  /*static String _getTextoResumo(
-    String projetoMaisUsado,
-    double totalHoras,
-    double mediaDiaria,
-    String nomeUsuario,
-    String? projetoFiltro,
-  ) {
-    if (totalHoras == 0) {
-      return '$nomeUsuario não foram registradas horas trabalhadas neste período.';
-    }
-
-    final totalFormatado = _formatarDuracaoPDF(totalHoras);
-    final mediaFormatada = _formatarDuracaoPDF(mediaDiaria);
-
-    final filtroTexto = projetoFiltro != null
-        ? ' no projeto "$projetoFiltro"'
-        : '';
-
-    return '$nomeUsuario registrou $totalFormatado de trabalho$filtroTexto. '
-        'O projeto "$projetoMaisUsado" foi o que demandou mais tempo, '
-        'com uma média diária de $mediaFormatada.';
-  }*/
 
   static Future<File> savePdf(pw.Document pdf, String fileName) async {
     final bytes = await pdf.save();

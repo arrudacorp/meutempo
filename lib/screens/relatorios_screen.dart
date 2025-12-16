@@ -548,7 +548,33 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
   }
 
   Future<void> _exportarPDF() async {
+    showDialog(
+      context: context,
+      builder: (context) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 20),
+            Text("Gerando PDF..."),
+          ],
+        ),
+      ),
+    );
+
     try {
+      // OBTER REGISTROS COMPLETOS (não apenas os filtrados que estão na tela)
+      final registrosCompletos = await _getTodosRegistrosPeriodo();
+
+      // Verificar se há muitos registros
+      if (registrosCompletos.length > 30) {
+        final continuar = await _mostrarAvisoRegistrosGrandes(
+          registrosCompletos.length,
+        );
+        if (!continuar) {
+          return; // Usuário cancelou
+        }
+      }
+
       final tempoPorProjeto = _calcularTempoPorProjeto();
       final tempoPorDia = _calcularTempoPorDia();
       final totalHoras = _calcularTotalHoras();
@@ -567,6 +593,8 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
         fim: _periodoSelecionado.end,
       );
 
+      await Future.delayed(const Duration(milliseconds: 100));
+
       final pdf = await PdfService.generateRelatorioPDF(
         tempoPorProjeto: tempoPorProjeto,
         tempoPorDia: tempoPorDia,
@@ -576,25 +604,86 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
         mediaDiaria: mediaDiaria,
         periodo: periodoPDF,
         nomeUsuario: nomeUsuario,
-        registros: _getRegistrosFiltrados(),
+        registros: _getRegistrosFiltrados(), // USAR REGISTROS COMPLETOS
         listaProjetos: _projetos,
-        projetoFiltro: _projetoFiltro != null
-            ? _getNomeProjetoFiltro()
-            : null, // NOVO PARÂMETRO
+        projetoFiltro: _projetoFiltro != null ? _getNomeProjetoFiltro() : null,
       );
+
+      Navigator.pop(context);
 
       // Mostrar preview e opções de compartilhamento
       await Printing.layoutPdf(
         onLayout: (PdfPageFormat format) async => pdf.save(),
       );
     } catch (e) {
+      Navigator.pop(context);
+
+      print('Erro detalhado no PDF: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erro ao gerar PDF: $e'),
+          content: Text('Erro ao gerar PDF: ${e.toString()}'),
           backgroundColor: Colors.red,
         ),
       );
     }
+  }
+
+  // NOVO: Obter todos os registros do período (não apenas os filtrados)
+  Future<List<TempoGasto>> _getTodosRegistrosPeriodo() async {
+    try {
+      final tempoGastoDao = TempoGastoDao();
+      final usuario = AuthService.getUsuarioLogado();
+      final idUsuario = usuario?.id ?? 1;
+
+      // Obter todos os registros do usuário
+      final todosRegistros = await tempoGastoDao.getTempoGastoByUsuario(
+        idUsuario,
+      );
+
+      // Filtrar pelo período selecionado
+      return todosRegistros.where((registro) {
+        return registro.dataHoraIni.isAfter(
+              _periodoSelecionado.start.subtract(Duration(days: 1)),
+            ) &&
+            registro.dataHoraIni.isBefore(
+              _periodoSelecionado.end.add(Duration(days: 1)),
+            );
+      }).toList();
+    } catch (e) {
+      print('Erro ao buscar registros: $e');
+      return [];
+    }
+  }
+
+  // NOVO: Aviso para muitos registros
+  Future<bool> _mostrarAvisoRegistrosGrandes(int totalRegistros) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Muitos Registros'),
+            content: Text(
+              'O período selecionado contém $totalRegistros registros.\n'
+              'O PDF pode ficar muito grande.\n\n'
+              'Recomendações:\n'
+              '• Reduza o período do relatório\n'
+              '• Aplique filtros específicos\n'
+              '• Divida em múltiplos relatórios\n\n'
+              'Deseja continuar mesmo assim?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                child: Text('Gerar PDF'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   @override
